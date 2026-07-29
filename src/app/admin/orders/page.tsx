@@ -74,11 +74,12 @@ export default function AdminPage() {
   const assignOrder = useCallback(async (orderId: string, deliveryId: string) => {
     setUpdatingId(orderId);
     try {
-      await fetch(`${API}/api/admin/orders/${orderId}/assign`, {
+      const res = await fetch(`${API}/api/admin/orders/${orderId}/assign`, {
         method: "PUT", headers: adminHeaders(adminKey), body: JSON.stringify({ deliveryId }),
       });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Request failed"); }
       loadAll();
-    } catch { alert("Failed to assign delivery executive"); }
+    } catch (e: any) { alert(e.message || "Failed to assign/unassign delivery executive"); }
     setUpdatingId(null);
   }, [adminKey, loadAll]);
 

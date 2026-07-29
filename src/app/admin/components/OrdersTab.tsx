@@ -292,37 +292,43 @@ export default function OrdersTab({
                               <p className="text-white text-sm">
                                 Assigned to: <span className="text-purple-400 font-medium">{order.deliveryExecutive?.name || `#${order.assignedTo.slice(-8).toUpperCase()}`}</span>
                               </p>
-                              {onAssign && deliveryExecs.length > 0 && (
+                              {onAssign && (
                                 <div className="flex gap-2 mt-2">
-                                  <select
-                                    value={assignSelections[order.id] || ""}
-                                    onChange={(e) => setAssignSelections((prev) => ({ ...prev, [order.id]: e.target.value }))}
-                                    className="flex-1 px-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
-                                  >
-                                    <option value="">Reassign to...</option>
-                                    {deliveryExecs.filter((e) => e.id !== order.assignedTo).map((exec) => (
-                                      <option key={exec.id} value={exec.id}>{exec.name}</option>
-                                    ))}
-                                  </select>
-                                  <button
-                                    onClick={() => {
-                                      if (assignSelections[order.id]) {
-                                        onAssign(order.id, assignSelections[order.id]);
-                                        setAssignSelections((prev) => ({ ...prev, [order.id]: "" }));
-                                      }
-                                    }}
-                                    disabled={assigningId === order.id || !assignSelections[order.id]}
-                                    className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-300 font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-50"
-                                  >
-                                    {assigningId === order.id ? "Assigning..." : "Assign"}
-                                  </button>
-                                  <button
-                                    onClick={() => { onAssign(order.id, ""); }}
-                                    disabled={assigningId === order.id}
-                                    className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-300 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
-                                  >
-                                    Unassign
-                                  </button>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {deliveryExecs.length > 0 && (
+                                      <>
+                                        <select
+                                          value={assignSelections[order.id] || ""}
+                                          onChange={(e) => setAssignSelections((prev) => ({ ...prev, [order.id]: e.target.value }))}
+                                          className="px-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                                        >
+                                          <option value="">Reassign to...</option>
+                                          {deliveryExecs.filter((e) => e.id !== order.assignedTo).map((exec) => (
+                                            <option key={exec.id} value={exec.id}>{exec.name}</option>
+                                          ))}
+                                        </select>
+                                        <button
+                                          onClick={() => {
+                                            if (assignSelections[order.id]) {
+                                              onAssign(order.id, assignSelections[order.id]);
+                                              setAssignSelections((prev) => ({ ...prev, [order.id]: "" }));
+                                            }
+                                          }}
+                                          disabled={assigningId === order.id || !assignSelections[order.id]}
+                                          className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-300 font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+                                        >
+                                          Assign
+                                        </button>
+                                      </>
+                                    )}
+                                    <button
+                                      onClick={() => { onAssign(order.id, ""); }}
+                                      disabled={assigningId === order.id}
+                                      className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-300 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                                    >
+                                      {assigningId === order.id ? "Removing..." : "Unassign"}
+                                    </button>
+                                  </div>
                                 </div>
                               )}
                             </div>
