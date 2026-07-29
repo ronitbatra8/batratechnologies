@@ -166,7 +166,7 @@ export default function SellersTab({ adminKey }: { adminKey: string }) {
                         </h4>
 
                         {(!detail?.orders || detail.orders.length === 0) ? (
-                          <p className="text-dark-500 text-xs py-4 text-center">No orders from this seller's products</p>
+                          <p className="text-dark-500 text-xs py-4 text-center">No orders from this seller&apos;s products</p>
                         ) : (
                           <div className="space-y-2">
                             {detail.orders.slice(0, 10).map((order: any) => (
