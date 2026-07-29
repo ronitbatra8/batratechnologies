@@ -83,16 +83,21 @@ export default function SellersTab({ adminKey }: { adminKey: string }) {
             const products = detail?.products || [];
             return (
               <div key={seller.id} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl overflow-hidden transition-all">
-                <button onClick={() => toggleExpand(seller.id)} className="w-full px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors text-left">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${seller.approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"}`}>
-                    {seller.approved ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                <div className="px-6 py-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${seller.approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"}`}>
+                      {seller.approved ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium">{seller.name}</p>
+                      <p className="text-dark-400 text-xs">{seller.email} {seller.phone ? `— ${seller.phone}` : ""}</p>
+                      <p className="text-dark-500 text-[10px] mt-0.5">{seller._count?.products || 0} products</p>
+                    </div>
+                    <button onClick={() => toggleExpand(seller.id)} className="shrink-0 p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-dark-500" /> : <ChevronDown className="w-4 h-4 text-dark-500" />}
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium">{seller.name}</p>
-                    <p className="text-dark-400 text-xs">{seller.email} {seller.phone ? `— ${seller.phone}` : ""}</p>
-                    <p className="text-dark-500 text-[10px] mt-0.5">{seller._count?.products || 0} products</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 mt-3">
                     <button onClick={(e) => { e.stopPropagation(); handleAccess(seller.id); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-purple-500/20 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1.5">
                       <LogIn className="w-3.5 h-3.5" /> Access Account
                     </button>
@@ -101,9 +106,8 @@ export default function SellersTab({ adminKey }: { adminKey: string }) {
                     ) : (
                       <button onClick={(e) => { e.stopPropagation(); handleApprove(seller.id, true); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/20 bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all">Approve</button>
                     )}
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-dark-500" /> : <ChevronDown className="w-4 h-4 text-dark-500" />}
                   </div>
-                </button>
+                </div>
 
                 {isExpanded && (
                   <div className="px-6 pb-6 border-t border-dark-800/30">

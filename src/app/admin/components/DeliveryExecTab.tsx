@@ -83,16 +83,21 @@ export default function DeliveryExecTab({ adminKey }: { adminKey: string }) {
             const orders = detail?.orders || [];
             return (
               <div key={exec.id} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl overflow-hidden transition-all">
-                <button onClick={() => toggleExpand(exec.id)} className="w-full px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors text-left">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${exec.approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"}`}>
-                    {exec.approved ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                <div className="px-6 py-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${exec.approved ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-yellow-500/10 border-yellow-500/20 text-yellow-400"}`}>
+                      {exec.approved ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium">{exec.name}</p>
+                      <p className="text-dark-400 text-xs">{exec.email} {exec.phone ? `— ${exec.phone}` : ""}</p>
+                      <p className="text-dark-500 text-[10px] mt-0.5">{orders.length} orders</p>
+                    </div>
+                    <button onClick={() => toggleExpand(exec.id)} className="shrink-0 p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-dark-500" /> : <ChevronDown className="w-4 h-4 text-dark-500" />}
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium">{exec.name}</p>
-                    <p className="text-dark-400 text-xs">{exec.email} {exec.phone ? `— ${exec.phone}` : ""}</p>
-                    <p className="text-dark-500 text-[10px] mt-0.5">{orders.length} orders</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 mt-3">
                     <button onClick={(e) => { e.stopPropagation(); handleAccess(exec.id); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-purple-500/20 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all flex items-center gap-1.5">
                       <LogIn className="w-3.5 h-3.5" /> Access Account
                     </button>
@@ -101,9 +106,8 @@ export default function DeliveryExecTab({ adminKey }: { adminKey: string }) {
                     ) : (
                       <button onClick={(e) => { e.stopPropagation(); handleApprove(exec.id, true); }} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-green-500/20 bg-green-500/10 text-green-400 hover:bg-green-500/20 transition-all">Approve</button>
                     )}
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-dark-500" /> : <ChevronDown className="w-4 h-4 text-dark-500" />}
                   </div>
-                </button>
+                </div>
 
                 {isExpanded && (
                   <div className="px-6 pb-6 border-t border-dark-800/30">
