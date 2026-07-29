@@ -57,7 +57,8 @@ export default function DeliveryDashboard() {
   }
 
   const activeOrders = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
-  const pendingOrders = orders.filter(o => o.status === "shipped");
+  const confirmedOrders = orders.filter(o => o.status === "confirmed");
+  const shippedOrders = orders.filter(o => o.status === "shipped");
   const outForDeliveryOrders = orders.filter(o => o.status === "out_for_delivery");
   const deliveredOrders = orders.filter(o => o.status === "delivered");
 
@@ -73,9 +74,10 @@ export default function DeliveryDashboard() {
           <button onClick={logout} className="flex items-center gap-2 text-dark-400 hover:text-white text-sm transition-colors"><LogOut size={16} /> Sign Out</button>
         </div>
 
-          <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-5 gap-4 mb-8">
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-gold-400">{stats.total}</p><p className="text-xs text-dark-400 mt-1">Total Assigned</p></div>
-            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-purple-400">{pendingOrders.length}</p><p className="text-xs text-dark-400 mt-1">To Pick Up</p></div>
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-blue-400">{confirmedOrders.length}</p><p className="text-xs text-dark-400 mt-1">New Orders</p></div>
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-purple-400">{shippedOrders.length}</p><p className="text-xs text-dark-400 mt-1">To Pick Up</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-orange-400">{outForDeliveryOrders.length}</p><p className="text-xs text-dark-400 mt-1">Out for Delivery</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-green-400">{stats.delivered}</p><p className="text-xs text-dark-400 mt-1">Delivered</p></div>
           </div>
@@ -86,10 +88,24 @@ export default function DeliveryDashboard() {
           <div className="text-center py-20 bg-dark-900/60 border border-dark-800/50 rounded-2xl"><Package className="w-12 h-12 text-dark-600 mx-auto mb-3" /><p className="text-dark-400 text-sm">No orders assigned to you yet</p></div>
         ) : (
           <div className="space-y-6">
-            {pendingOrders.length > 0 && (
+            {confirmedOrders.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Truck size={18} className="text-purple-400" /> To Pick Up ({pendingOrders.length})</h2>
-                <div className="space-y-3">{[...pendingOrders].reverse().map(order => (
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Clock size={18} className="text-blue-400" /> New Orders ({confirmedOrders.length})</h2>
+                <div className="space-y-3">{[...confirmedOrders].reverse().map(order => (
+                  <Link key={order.id} href={`/delivery/order-detail?id=${order.id}`} className="block bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors group">
+                    <div className="flex items-center justify-between">
+                      <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>
+                      <div className="flex items-center gap-3"><span className="px-3 py-1 rounded-full text-[10px] font-semibold border text-blue-400 bg-blue-500/10 border-blue-500/20">CONFIRMED</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 text-dark-400 text-xs"><MapPin size={12} /> {order.shippingAddress}, {order.shippingCity}</div>
+                  </Link>
+                ))}</div>
+              </div>
+            )}
+            {shippedOrders.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Truck size={18} className="text-purple-400" /> To Pick Up ({shippedOrders.length})</h2>
+                <div className="space-y-3">{[...shippedOrders].reverse().map(order => (
                   <Link key={order.id} href={`/delivery/order-detail?id=${order.id}`} className="block bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors group">
                     <div className="flex items-center justify-between">
                       <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>

@@ -170,6 +170,20 @@ router.get("/users/:id", adminAuth, async (req, res) => {
     });
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    if (user.role === "DELIVERY") {
+      const assignedOrders = await prisma.order.findMany({
+        where: { assignedTo: req.params.id },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, items: true, totalAmount: true, status: true,
+          shippingName: true, shippingPhone: true, shippingAddress: true,
+          shippingCity: true, shippingState: true, shippingPincode: true,
+          paymentMethod: true, createdAt: true,
+        },
+      });
+      user.orders = assignedOrders;
+    }
+
     const totalSpent = user.orders.reduce((sum, o) => sum + (o.status !== "cancelled" ? o.totalAmount : 0), 0);
     res.json({ ...user, totalSpent });
   } catch (err) {
@@ -250,9 +264,12 @@ router.put("/users/:id/approve", adminAuth, async (req, res) => {
 router.put("/orders/:id/assign", adminAuth, async (req, res) => {
   try {
     const { deliveryId } = req.body;
-    if (!deliveryId) return res.status(400).json({ error: "deliveryId is required" });
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: "Order not found" });
+    if (!deliveryId) {
+      await prisma.order.update({ where: { id: req.params.id }, data: { assignedTo: null } });
+      return res.json({ message: "Order unassigned" });
+    }
     const exec = await prisma.user.findUnique({ where: { id: deliveryId } });
     if (!exec || exec.role !== "DELIVERY") return res.status(400).json({ error: "Invalid delivery executive" });
     if (!exec.approved) return res.status(400).json({ error: "Delivery executive is not approved" });

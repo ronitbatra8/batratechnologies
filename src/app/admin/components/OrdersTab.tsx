@@ -316,6 +316,13 @@ export default function OrdersTab({
                                   >
                                     {assigningId === order.id ? "Assigning..." : "Assign"}
                                   </button>
+                                  <button
+                                    onClick={() => { onAssign(order.id, ""); }}
+                                    disabled={assigningId === order.id}
+                                    className="px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-300 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                                  >
+                                    Unassign
+                                  </button>
                                 </div>
                               )}
                             </div>
