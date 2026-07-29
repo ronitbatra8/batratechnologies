@@ -16,3 +16,7 @@ dev-errors.txt
 
 # Local Netlify folder
 .netlify
+
+.vercel
+tunnel-watch.log
+watch-errors.txt

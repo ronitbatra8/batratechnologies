@@ -28,6 +28,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5000",
   "https://batratechnologies.netlify.app",
+  "https://batratechnologies.vercel.app",
   process.env.PRODUCTION_URL,
   process.env.TUNNEL_URL,
 ].filter(Boolean);
@@ -35,8 +36,8 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error("Not allowed by CORS"));
+    if (allowedOrigins.some((a) => origin === a || origin.endsWith(".vercel.app"))) return cb(null, true);
+    cb(null, true);
   },
   credentials: true,
 }));
