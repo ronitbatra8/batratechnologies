@@ -17,6 +17,8 @@ const newsletterRoutes = require("./routes/newsletter");
 const messageRoutes = require("./routes/messages");
 const deliveryRoutes = require("./routes/delivery");
 const sellerRoutes = require("./routes/seller");
+const cartRoutes = require("./routes/cart");
+const { sendAbandonedCartEmail } = require("./utils/email");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -61,6 +63,7 @@ app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/seller", sellerRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
@@ -83,6 +86,21 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} (env: ${process.env.NODE_ENV || "unset"})`);
 });
+
+setInterval(async () => {
+  try {
+    const cutoff = new Date(Date.now() - 60 * 60 * 1000);
+    const carts = await prisma.cart.findMany({
+      where: { updatedAt: { lt: cutoff } },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+    for (const cart of carts) {
+      if (!cart.user.email || !Array.isArray(cart.items) || cart.items.length === 0) continue;
+      sendAbandonedCartEmail(cart.user.email, cart.user.name || "Customer", cart.items).catch(() => {});
+    }
+    if (carts.length > 0) console.log(`Abandoned cart reminders sent: ${carts.length}`);
+  } catch {}
+}, 60 * 60 * 1000);
 
 function shutdown() {
   console.log("\nShutting down...");

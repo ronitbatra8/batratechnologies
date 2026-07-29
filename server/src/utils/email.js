@@ -117,6 +117,7 @@ const STATUS_LABELS = {
   confirmed: { text: "Confirmed", color: "#3b82f6" },
   pending: { text: "Pending", color: "#eab308" },
   shipped: { text: "Shipped", color: "#a855f7" },
+  out_for_delivery: { text: "Out for Delivery", color: "#f59e0b" },
   delivered: { text: "Delivered", color: "#22c55e" },
   cancelled: { text: "Cancelled", color: "#ef4444" },
 };
@@ -284,4 +285,37 @@ async function sendDeliveryCodeEmail(to, name, code, deliveryPersonName) {
   });
 }
 
-module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail };
+async function sendAbandonedCartEmail(to, name, items) {
+  if (!to) return;
+  const itemList = (items || []).slice(0, 5).map((i) =>
+    `<tr><td style="padding:8px 0;color:#ccc;font-size:13px;border-bottom:1px solid #222;">${escapeHtml(i.name || "Product")}</td><td style="padding:8px 0;color:#999;font-size:13px;border-bottom:1px solid #222;text-align:center;">${escapeHtml(String(i.quantity || 1))}</td><td style="padding:8px 0;color:#d4a853;font-size:13px;border-bottom:1px solid #222;text-align:right;">₹${((i.price || 0) * (i.quantity || 1)).toLocaleString("en-IN")}</td></tr>`
+  ).join("");
+
+  await transporter.sendMail({
+    from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "You left something in your cart! — Batra Technologies",
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:40px;border-radius:16px;">
+        ${HEADER}
+        <p style="color:#999;font-size:14px;margin:0 0 4px;">Hello ${escapeHtml(name)},</p>
+        <p style="color:#999;font-size:14px;margin:0 0 20px;">You left these items in your cart. Complete your order before they go out of stock!</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+          <tr style="border-bottom:1px solid #333;">
+            <td style="padding:8px 0;color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Item</td>
+            <td style="padding:8px 0;color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:center;">Qty</td>
+            <td style="padding:8px 0;color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:right;">Price</td>
+          </tr>
+          ${itemList}
+        </table>
+        <div style="text-align:center;margin:24px 0;">
+          <a href="${process.env.PRODUCTION_URL || "https://batratechnologies.vercel.app"}/cart" style="display:inline-block;background:#d4a853;color:#0a0a0a;font-size:14px;font-weight:bold;padding:14px 32px;border-radius:12px;text-decoration:none;">Return to Cart</a>
+        </div>
+        <p style="color:#666;font-size:12px;margin:24px 0 0;text-align:center;">Your cart will be saved for 7 days. Don't miss out!</p>
+        ${FOOTER}
+      </div>
+    `,
+  });
+}
+
+module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail, sendAbandonedCartEmail };

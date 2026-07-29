@@ -11,6 +11,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { LoadingProvider } from "@/components/LoadingProvider";
 import ContentWrapper from "@/components/ContentWrapper";
 import AnalyticsProvider from "@/components/AnalyticsProvider";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 export const metadata: Metadata = {
   title: "Batra Technologies | Luxury Electronics",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <main className="flex-1">{children}</main>
                 <Footer />
                 <ScrollToTop />
+                <WhatsAppWidget />
                 </AnalyticsProvider>
               </AuthProvider>
             </CartProvider>

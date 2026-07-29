@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import type { Product } from "@/data/products";
+import { apiFetch } from "@/lib/api";
 
 export interface CartItem {
   product: Product;
@@ -28,6 +29,7 @@ function getCartKey(): string {
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [cartKey, setCartKey] = useState<string>("bt-cart-guest");
+  const syncTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const key = getCartKey();
@@ -51,6 +53,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem(cartKey, JSON.stringify(items));
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    const userId = localStorage.getItem("bt-current-user-id");
+    if (!userId || userId === "guest") return;
+    syncTimer.current = setTimeout(async () => {
+      try {
+        const payload = items.map((i) => ({ id: i.product.id, productId: i.product.id, name: i.product.name, price: i.product.price, quantity: i.quantity, image: i.product.images?.[0] || "" }));
+        await apiFetch("/cart", { method: "PUT", body: JSON.stringify({ items: payload }) });
+      } catch {}
+    }, 2000);
+    return () => { if (syncTimer.current) clearTimeout(syncTimer.current); };
   }, [items, cartKey]);
 
   const addToCart = useCallback((product: Product, quantity = 1) => {

@@ -68,7 +68,7 @@ function DeliveryOrderDetailInner() {
             <p className="text-xs text-dark-400 font-medium">ORDER #{order.id.slice(-8).toUpperCase()}</p>
             <p className="text-2xl font-display font-bold text-white">Delivery Details</p>
           </div>
-          <span className={`ml-auto px-4 py-1.5 rounded-full text-xs font-semibold border ${order.status === "delivered" ? "text-green-400 bg-green-500/10 border-green-500/20" : order.status === "shipped" ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}`}>{order.status.toUpperCase()}</span>
+          <span className={`ml-auto px-4 py-1.5 rounded-full text-xs font-semibold border ${order.status === "delivered" ? "text-green-400 bg-green-500/10 border-green-500/20" : order.status === "out_for_delivery" ? "text-orange-400 bg-orange-500/10 border-orange-500/20" : order.status === "shipped" ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}`}>{order.status === "out_for_delivery" ? "OUT FOR DELIVERY" : order.status.toUpperCase()}</span>
         </div>
 
         <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-6 space-y-6">

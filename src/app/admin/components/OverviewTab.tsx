@@ -23,7 +23,7 @@ export default function OverviewTab({ stats, orders, passwordResets, messages, o
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Revenue", value: formatPrice(stats.totalRevenue), icon: TrendingUp, color: "text-gold-400", bg: "from-gold-500/20 to-gold-500/10", border: "border-gold-500/30", onClick: () => onNavigate("orders") },
-          { label: "Total Orders", value: stats.totalOrders, icon: Package, color: "text-blue-400", bg: "from-blue-500/20 to-blue-500/10", border: "border-blue-500/30", sub: `${stats.pendingOrders} pending`, onClick: () => onNavigate("orders") },
+          { label: "Total Orders", value: stats.totalOrders, icon: Package, color: "text-blue-400", bg: "from-blue-500/20 to-blue-500/10", border: "border-blue-500/30", sub: `${stats.pendingOrders || 0} pending, ${stats.outForDeliveryOrders || 0} out for delivery`, onClick: () => onNavigate("orders") },
           { label: "Total Users", value: stats.totalUsers, icon: Users, color: "text-purple-400", bg: "from-purple-500/20 to-purple-500/10", border: "border-purple-500/30", onClick: () => onNavigate("users") },
           { label: "Delivered", value: stats.deliveredOrders, icon: CheckCircle2, color: "text-green-400", bg: "from-green-500/20 to-green-500/10", border: "border-green-500/30", sub: `${stats.totalOrders > 0 ? Math.round((stats.deliveredOrders / stats.totalOrders) * 100) : 0}% rate`, onClick: () => onNavigate("orders") },
         ].map((s) => (

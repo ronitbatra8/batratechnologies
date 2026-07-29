@@ -102,11 +102,12 @@ router.get("/stats", adminAuth, async (req, res) => {
     const revenue = await prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "cancelled" } } });
     const pendingOrders = await prisma.order.count({ where: { status: "pending" } });
     const confirmedOrders = await prisma.order.count({ where: { status: "confirmed" } });
+    const outForDeliveryOrders = await prisma.order.count({ where: { status: "out_for_delivery" } });
     const deliveredOrders = await prisma.order.count({ where: { status: "delivered" } });
     res.json({
       totalOrders, totalUsers, totalProducts,
       totalRevenue: revenue._sum.totalAmount || 0,
-      pendingOrders, confirmedOrders, deliveredOrders,
+      pendingOrders, confirmedOrders, outForDeliveryOrders, deliveredOrders,
     });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });

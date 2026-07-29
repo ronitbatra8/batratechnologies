@@ -91,6 +91,23 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+router.get("/track/:id", async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true, items: true, totalAmount: true, status: true, createdAt: true,
+        shippingName: true, shippingPhone: true, shippingAddress: true,
+        shippingCity: true, shippingState: true, shippingPincode: true, paymentMethod: true,
+      },
+    });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
 router.get("/:id", auth, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });

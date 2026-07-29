@@ -57,6 +57,8 @@ export default function DeliveryDashboard() {
   }
 
   const activeOrders = orders.filter(o => o.status !== "delivered" && o.status !== "cancelled");
+  const pendingOrders = orders.filter(o => o.status === "shipped");
+  const outForDeliveryOrders = orders.filter(o => o.status === "out_for_delivery");
   const deliveredOrders = orders.filter(o => o.status === "delivered");
 
   return (
@@ -71,11 +73,12 @@ export default function DeliveryDashboard() {
           <button onClick={logout} className="flex items-center gap-2 text-dark-400 hover:text-white text-sm transition-colors"><LogOut size={16} /> Sign Out</button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-gold-400">{stats.total}</p><p className="text-xs text-dark-400 mt-1">Total Assigned</p></div>
-          <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-blue-400">{activeOrders.length}</p><p className="text-xs text-dark-400 mt-1">Pending Delivery</p></div>
-          <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-green-400">{stats.delivered}</p><p className="text-xs text-dark-400 mt-1">Delivered</p></div>
-        </div>
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-gold-400">{stats.total}</p><p className="text-xs text-dark-400 mt-1">Total Assigned</p></div>
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-purple-400">{pendingOrders.length}</p><p className="text-xs text-dark-400 mt-1">To Pick Up</p></div>
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-orange-400">{outForDeliveryOrders.length}</p><p className="text-xs text-dark-400 mt-1">Out for Delivery</p></div>
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-green-400">{stats.delivered}</p><p className="text-xs text-dark-400 mt-1">Delivered</p></div>
+          </div>
 
         {fetching ? (
           <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-2 border-gold-500/20 border-t-gold-500 rounded-full animate-spin" /></div>
@@ -83,14 +86,28 @@ export default function DeliveryDashboard() {
           <div className="text-center py-20 bg-dark-900/60 border border-dark-800/50 rounded-2xl"><Package className="w-12 h-12 text-dark-600 mx-auto mb-3" /><p className="text-dark-400 text-sm">No orders assigned to you yet</p></div>
         ) : (
           <div className="space-y-6">
-            {activeOrders.length > 0 && (
+            {pendingOrders.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Truck size={18} className="text-gold-400" /> Active Deliveries</h2>
-                <div className="space-y-3">{[...activeOrders].reverse().map(order => (
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Truck size={18} className="text-purple-400" /> To Pick Up ({pendingOrders.length})</h2>
+                <div className="space-y-3">{[...pendingOrders].reverse().map(order => (
                   <Link key={order.id} href={`/delivery/order-detail?id=${order.id}`} className="block bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors group">
                     <div className="flex items-center justify-between">
                       <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>
-                      <div className="flex items-center gap-3"><span className={`px-3 py-1 rounded-full text-[10px] font-semibold border ${order.status === "shipped" ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}`}>{order.status.toUpperCase()}</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
+                      <div className="flex items-center gap-3"><span className="px-3 py-1 rounded-full text-[10px] font-semibold border text-purple-400 bg-purple-500/10 border-purple-500/20">SHIPPED</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 text-dark-400 text-xs"><MapPin size={12} /> {order.shippingAddress}, {order.shippingCity}</div>
+                  </Link>
+                ))}</div>
+              </div>
+            )}
+            {outForDeliveryOrders.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Truck size={18} className="text-orange-400" /> Out for Delivery ({outForDeliveryOrders.length})</h2>
+                <div className="space-y-3">{[...outForDeliveryOrders].reverse().map(order => (
+                  <Link key={order.id} href={`/delivery/order-detail?id=${order.id}`} className="block bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors group">
+                    <div className="flex items-center justify-between">
+                      <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>
+                      <div className="flex items-center gap-3"><span className="px-3 py-1 rounded-full text-[10px] font-semibold border text-orange-400 bg-orange-500/10 border-orange-500/20">OUT FOR DELIVERY</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
                     </div>
                     <div className="flex items-center gap-2 mt-3 text-dark-400 text-xs"><MapPin size={12} /> {order.shippingAddress}, {order.shippingCity}</div>
                   </Link>

@@ -35,7 +35,7 @@ router.post("/orders/:id/send-code", auth, requireRole("DELIVERY"), async (req, 
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: "Order not found" });
     if (order.assignedTo !== req.userId) return res.status(403).json({ error: "Not assigned to you" });
-    if (order.status !== "shipped") return res.status(400).json({ error: "Order must be shipped first" });
+    if (order.status !== "shipped" && order.status !== "out_for_delivery") return res.status(400).json({ error: "Order must be shipped first" });
     if (order.deliveryCode) return res.status(400).json({ error: "Code already sent" });
 
     const user = await prisma.user.findUnique({ where: { id: order.userId } });
@@ -44,7 +44,7 @@ router.post("/orders/:id/send-code", auth, requireRole("DELIVERY"), async (req, 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     await prisma.order.update({
       where: { id: order.id },
-      data: { deliveryCode: code, deliveryCodeSentAt: new Date() },
+      data: { deliveryCode: code, deliveryCodeSentAt: new Date(), status: "out_for_delivery" },
     });
 
     const deliveryGuy = await prisma.user.findUnique({ where: { id: req.userId } });

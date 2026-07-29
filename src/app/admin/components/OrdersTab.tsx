@@ -20,6 +20,7 @@ const statusGradients: Record<string, string> = {
   pending: "from-yellow-500/15 to-yellow-500/5",
   confirmed: "from-blue-500/15 to-blue-500/5",
   shipped: "from-purple-500/15 to-purple-500/5",
+  out_for_delivery: "from-orange-500/15 to-orange-500/5",
   delivered: "from-green-500/15 to-green-500/5",
   cancelled: "from-red-500/15 to-red-500/5",
 };
@@ -28,6 +29,7 @@ const statusBorders: Record<string, string> = {
   pending: "border-l-yellow-400",
   confirmed: "border-l-blue-400",
   shipped: "border-l-purple-400",
+  out_for_delivery: "border-l-orange-400",
   delivered: "border-l-green-400",
   cancelled: "border-l-red-400",
 };
@@ -95,7 +97,7 @@ export default function OrdersTab({
     return matchesSearch && matchesFilter;
   });
 
-  const statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
+  const statuses = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"];
 
   const statusCounts = statuses.reduce((acc, status) => {
     acc[status] = orders.filter((o) => o.status === status).length;
@@ -139,7 +141,7 @@ export default function OrdersTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
         {statuses.map((status) => (
           <button
             key={status}
@@ -148,7 +150,7 @@ export default function OrdersTab({
             }
             className={`p-3 rounded-xl border text-center transition-all bg-gradient-to-br ${
               orderFilter === status
-                ? `${statusGradients[status]} border-${status === "pending" ? "yellow" : status === "confirmed" ? "blue" : status === "shipped" ? "purple" : status === "delivered" ? "green" : "red"}-500/30`
+                ? `${statusGradients[status]} border-${status === "pending" ? "yellow" : status === "confirmed" ? "blue" : status === "shipped" ? "purple" : status === "out_for_delivery" ? "orange" : status === "delivered" ? "green" : "red"}-500/30`
                 : "border-dark-800/50 from-dark-900/40 to-dark-900/20 hover:from-dark-800/30 hover:to-dark-800/10"
             }`}
           >

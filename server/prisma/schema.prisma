@@ -24,6 +24,7 @@ model User {
   messages       Message[]
   products       Product[]
   passwordResets PasswordReset[]
+  cart           Cart?
 }
 
 model SavedAddress {
@@ -81,6 +82,15 @@ model Order {
   paymentMethod   String   @default("COD")
   status          String   @default("pending")
   createdAt       DateTime @default(now())
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  items     Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
 
 model Otp {

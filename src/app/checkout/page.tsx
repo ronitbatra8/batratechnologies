@@ -201,7 +201,7 @@ export default function CheckoutPage() {
       <h1 className="text-4xl font-display font-bold text-white mb-10">Checkout</h1>
 
       <div className="flex items-center gap-4 mb-12">
-        {["Shipping", "Review"].map((label, i) => (
+        {["Details", "Review"].map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${step > i + 1 ? "bg-green-500 text-white" : step === i + 1 ? "bg-gradient-to-br from-gold-400 to-gold-600 text-dark-950" : "bg-dark-800 text-dark-500 border border-dark-700"}`}>
               {step > i + 1 ? <Check size={14} /> : i + 1}
@@ -217,7 +217,7 @@ export default function CheckoutPage() {
           <form onSubmit={step === 1 ? handleShippingNext : handlePlaceOrder}>
             {step === 1 && (
               <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-8 space-y-6">
-                <h2 className="font-display text-xl font-bold text-white">Shipping Details</h2>
+                <h2 className="font-display text-xl font-bold text-white">Delivery Details</h2>
                 {error && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>}
 
                 {savedAddresses.length > 0 && (
