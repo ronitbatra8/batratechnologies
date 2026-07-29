@@ -23,13 +23,6 @@ function VerifyOTPContent() {
   }, [email, router]);
 
   useEffect(() => {
-    const token = localStorage.getItem("bt-token");
-    if (token) {
-      window.location.href = "/";
-    }
-  }, []);
-
-  useEffect(() => {
     if (resendTimer > 0) {
       const t = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
       return () => clearTimeout(t);

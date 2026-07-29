@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Eye, EyeOff, Mail, Lock, Phone, User as UserIcon, Crown, UserPlus } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Phone, User as UserIcon, Crown, UserPlus, Truck, Store } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
-const OWNER_EMAIL = "batraronit32@gmail.com";
+const OWNER_EMAIL = "batra.ronit.08.11@gmail.com";
 const OWNER_PHONE = "9351396757";
 
 function LoginContent() {
@@ -25,12 +25,16 @@ function LoginContent() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const isOwnerInput = () => {
-    const cleaned = phone.replace(/[\s\-\(\)+]/g, "");
-    const normalizedPhone = cleaned.startsWith("91") && cleaned.length === 12 ? cleaned.slice(2) : cleaned;
-    if (loginMethod === "email" && email.toLowerCase() === OWNER_EMAIL) return true;
-    if (loginMethod === "phone" && normalizedPhone === OWNER_PHONE) return true;
-    return false;
+  const [pendingUser, setPendingUser] = useState<any>(null);
+
+  const getRoleChoiceOptions = (user: any) => {
+    const options: { role: string; href: string; icon: any; label: string; desc: string; gold: boolean }[] = [
+      { role: "customer", href: "/", icon: UserIcon, label: "Shop as Customer", desc: "Browse products and place orders", gold: false },
+    ];
+    if (user.role === "DELIVERY") options.push({ role: "delivery", href: "/delivery", icon: Truck, label: "Delivery Dashboard", desc: "View assigned orders and manage deliveries", gold: true });
+    if (user.role === "SELLER") options.push({ role: "seller", href: "/seller", icon: Store, label: "Seller Dashboard", desc: "Manage your products and listings", gold: true });
+    if (user.email === OWNER_EMAIL || user.phone === OWNER_PHONE) options.push({ role: "owner", href: "/admin/orders", icon: Crown, label: "Owner Dashboard", desc: "Manage orders, users and products", gold: true });
+    return options;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -66,10 +70,12 @@ function LoginContent() {
     }
     setLoading(true);
     try {
-      await login(identifier, password, addMode);
+      const loggedInUser = await login(identifier, password, addMode);
+      setPendingUser(loggedInUser);
+      const options = getRoleChoiceOptions(loggedInUser);
       if (addMode) {
         router.push("/");
-      } else if (isOwnerInput()) {
+      } else if (options.length > 1) {
         setShowRoleChoice(true);
       } else {
         router.push("/");
@@ -84,39 +90,33 @@ function LoginContent() {
 
 
   if (showRoleChoice) {
+    const options = getRoleChoiceOptions(pendingUser);
+    const isOwner = pendingUser?.email === OWNER_EMAIL || pendingUser?.phone === OWNER_PHONE;
+    const name = pendingUser?.name?.split(" ")[0] || "User";
+
     return (
       <div className="min-h-screen flex items-center justify-center px-6 pt-24 pb-12 page-transition">
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
-            <span className="text-gold-400 text-xs font-semibold uppercase tracking-[0.3em]">Welcome Ronit</span>
+            <span className="text-gold-400 text-xs font-semibold uppercase tracking-[0.3em]">Welcome {isOwner ? "Ronit" : name}</span>
             <h1 className="text-4xl font-display font-bold text-white mt-2">Choose Access</h1>
             <p className="text-dark-400 text-sm mt-2">How would you like to continue?</p>
           </div>
 
           <div className="space-y-4">
-            <button onClick={() => router.push("/")} className="w-full bg-dark-900/60 border border-dark-800/50 hover:border-gold-500/30 rounded-2xl p-6 text-left transition-all group">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-dark-800 border border-dark-700 group-hover:border-gold-500/30 flex items-center justify-center transition-colors">
-                  <UserIcon size={24} className="text-dark-400 group-hover:text-gold-400 transition-colors" />
+            {options.map((opt) => (
+              <button key={opt.role} onClick={() => router.push(opt.href)} className={`w-full bg-dark-900/60 border ${opt.gold ? "border-gold-500/20 hover:border-gold-500/40" : "border-dark-800/50 hover:border-gold-500/30"} rounded-2xl p-6 text-left transition-all group`}>
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-xl ${opt.gold ? "bg-gold-500/10 border border-gold-500/20" : "bg-dark-800 border border-dark-700 group-hover:border-gold-500/30"} flex items-center justify-center transition-colors`}>
+                    <opt.icon size={24} className={opt.gold ? "text-gold-500" : "text-dark-400 group-hover:text-gold-400 transition-colors"} />
+                  </div>
+                  <div>
+                    <h3 className={`text-lg font-display font-bold ${opt.gold ? "text-gold-400" : "text-white"}`}>{opt.label}</h3>
+                    <p className="text-sm text-dark-400">{opt.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-display font-bold text-white">Shop as Customer</h3>
-                  <p className="text-sm text-dark-400">Browse products and place orders</p>
-                </div>
-              </div>
-            </button>
-
-            <button onClick={() => router.push("/admin/orders")} className="w-full bg-dark-900/60 border border-gold-500/20 hover:border-gold-500/40 rounded-2xl p-6 text-left transition-all group">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center transition-colors">
-                  <Crown size={24} className="text-gold-500" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-display font-bold text-gold-400">Owner Dashboard</h3>
-                  <p className="text-sm text-dark-400">Manage orders, users and products</p>
-                </div>
-              </div>
-            </button>
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -187,6 +187,30 @@ function LoginContent() {
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
+
+          <div className="mt-6 pt-5 border-t border-dark-800/50">
+            <p className="text-xs text-dark-500 uppercase tracking-wider font-medium text-center mb-3">Not a customer?</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Link href="/register" onClick={() => { sessionStorage.setItem("bt-register-role", "DELIVERY"); }} className="flex items-center gap-2 bg-dark-800/50 border border-dark-700 hover:border-gold-500/30 rounded-xl px-3 py-2.5 text-left transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-dark-800 border border-dark-700 flex items-center justify-center shrink-0 group-hover:border-gold-500/30 transition-colors">
+                  <Truck size={15} className="text-dark-400 group-hover:text-gold-400 transition-colors" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-white truncate">Delivery</p>
+                  <p className="text-[10px] text-dark-500 truncate">Deliver & earn</p>
+                </div>
+              </Link>
+              <Link href="/register" onClick={() => { sessionStorage.setItem("bt-register-role", "SELLER"); }} className="flex items-center gap-2 bg-dark-800/50 border border-dark-700 hover:border-gold-500/30 rounded-xl px-3 py-2.5 text-left transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-dark-800 border border-dark-700 flex items-center justify-center shrink-0 group-hover:border-gold-500/30 transition-colors">
+                  <Store size={15} className="text-dark-400 group-hover:text-gold-400 transition-colors" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-white truncate">Seller</p>
+                  <p className="text-[10px] text-dark-500 truncate">Sell products</p>
+                </div>
+              </Link>
+            </div>
+          </div>
         </div>
 
         <p className="text-center text-sm text-dark-500 mt-8">

@@ -13,12 +13,16 @@ model User {
   email          String          @unique
   password       String
   phone          String?
+  role           String          @default("CUSTOMER")
+  approved       Boolean         @default(false)
   createdAt      DateTime        @default(now())
   orders         Order[]
+  assignedOrders Order[]         @relation("DeliveryOrders")
   savedAddresses SavedAddress[]
   reviews        Review[]
   wishlists      Wishlist[]
   messages       Message[]
+  products       Product[]
   passwordResets PasswordReset[]
 }
 
@@ -52,6 +56,8 @@ model Product {
   reviewCount   Int      @default(0)
   inStock       Boolean  @default(true)
   badge         String?
+  sellerId      String?
+  seller        User?    @relation(fields: [sellerId], references: [id])
   reviews       Review[]
   wishlists     Wishlist[]
 }
@@ -60,6 +66,10 @@ model Order {
   id              String   @id @default(cuid())
   userId          String
   user            User     @relation(fields: [userId], references: [id])
+  assignedTo      String?
+  deliveryExecutive User?  @relation("DeliveryOrders", fields: [assignedTo], references: [id])
+  deliveryCode    String?
+  deliveryCodeSentAt DateTime?
   items           Json
   totalAmount     Float
   shippingName    String
@@ -79,6 +89,7 @@ model Otp {
   phone     String?
   name      String
   password  String
+  role      String   @default("CUSTOMER")
   code      String
   expiresAt DateTime
   createdAt DateTime @default(now())

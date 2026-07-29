@@ -1,6 +1,6 @@
 "use client";
 
-export type Tab = "overview" | "orders" | "users" | "messages" | "security" | "analytics" | "newsletter";
+export type Tab = "overview" | "orders" | "users" | "messages" | "security" | "analytics" | "newsletter" | "delivery" | "sellers";
 export type UserDetailTab = "overview" | "orders" | "addresses" | "reviews" | "wishlist" | "messages" | "security";
 
 export const API = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000").replace("/api", "");

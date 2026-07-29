@@ -33,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const key = getCartKey();
     setCartKey(key);
     const saved = localStorage.getItem(key);
-    if (saved) setItems(JSON.parse(saved));
+    if (saved) { try { setItems(JSON.parse(saved)); } catch { setItems([]); } }
     else setItems([]);
   }, []);
 
@@ -42,7 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const key = getCartKey();
       setCartKey(key);
       const saved = localStorage.getItem(key);
-      if (saved) setItems(JSON.parse(saved));
+      if (saved) { try { setItems(JSON.parse(saved)); } catch { setItems([]); } }
       else setItems([]);
     };
     window.addEventListener("bt-account-switch", handleAccountSwitch);

@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { products, categories, getFeaturedProducts } from "@/data/products";
+import { products, categories } from "@/data/products";
 import { ArrowRight, Shield, Truck, HeadphonesIcon, RotateCcw, Star } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import Reveal from "@/components/Reveal";
-import CartNotification from "@/components/CartNotification";
 import { useState, useEffect } from "react";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import NewsletterForm from "@/components/NewsletterForm";
@@ -58,7 +57,7 @@ function HeroSection() {
             </div>
           </div>
           <div className="hero-line-reveal" style={{ animationDelay: `${base + 1.2}s` }}>
-            <div className="flex gap-12 mt-16">
+            <div className="flex gap-6 sm:gap-12 mt-16">
               {[
                 { value: "12K+", label: "Products" },
                 { value: "50K+", label: "Clients" },
@@ -301,7 +300,7 @@ function NewsletterSection() {
 
 export default function HomePage() {
   return (
-    <div className="page-transition">
+    <div className="page-transition overflow-x-hidden">
       <HeroSection />
       <TrustBar />
       <CategoriesSection />

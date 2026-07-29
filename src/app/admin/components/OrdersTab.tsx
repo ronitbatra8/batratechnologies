@@ -10,9 +10,11 @@ import {
   Phone,
   MapPin,
   CreditCard,
+  UserCheck,
+  Loader2,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { statusColors } from "./types";
+import { statusColors, API, adminHeaders } from "./types";
 
 const statusGradients: Record<string, string> = {
   pending: "from-yellow-500/15 to-yellow-500/5",
@@ -34,19 +36,35 @@ export default function OrdersTab({
   orders,
   updatingId,
   onStatusUpdate,
+  onAssign,
   focusOrderId,
   onFocusHandled,
+  adminKey,
 }: {
   orders: any[];
   updatingId: string | null;
   onStatusUpdate: (orderId: string, status: string) => void;
+  onAssign?: (orderId: string, deliveryId: string) => void;
   focusOrderId?: string | null;
   onFocusHandled?: () => void;
+  adminKey?: string;
 }) {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderFilter, setOrderFilter] = useState("all");
+  const [deliveryExecs, setDeliveryExecs] = useState<any[]>([]);
+  const [assignSelections, setAssignSelections] = useState<Record<string, string>>({});
+  const [assigningId, setAssigningId] = useState<string | null>(null);
   const lastFocusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (adminKey) {
+      fetch(`${API}/api/admin/delivery-executives`, { headers: adminHeaders(adminKey) })
+        .then((r) => r.json())
+        .then((data) => { if (!data.error) setDeliveryExecs(data); })
+        .catch(() => {});
+    }
+  }, [adminKey]);
 
   useEffect(() => {
     if (focusOrderId && focusOrderId !== lastFocusRef.current) {
@@ -261,9 +279,87 @@ export default function OrdersTab({
                           </p>
                         </div>
                       </div>
+
+                      <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 rounded-xl p-4 space-y-3">
+                        <h4 className="text-xs text-purple-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+                          <Package className="w-3.5 h-3.5" /> Delivery Info
+                        </h4>
+                        <div className="space-y-2">
+                          {order.assignedTo ? (
+                            <div>
+                              <p className="text-white text-sm">
+                                Assigned to: <span className="text-purple-400 font-medium">{order.deliveryExecutive?.name || `#${order.assignedTo.slice(-8).toUpperCase()}`}</span>
+                              </p>
+                              {onAssign && deliveryExecs.length > 0 && (
+                                <div className="flex gap-2 mt-2">
+                                  <select
+                                    value={assignSelections[order.id] || ""}
+                                    onChange={(e) => setAssignSelections((prev) => ({ ...prev, [order.id]: e.target.value }))}
+                                    className="flex-1 px-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                                  >
+                                    <option value="">Reassign to...</option>
+                                    {deliveryExecs.filter((e) => e.id !== order.assignedTo).map((exec) => (
+                                      <option key={exec.id} value={exec.id}>{exec.name}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => {
+                                      if (assignSelections[order.id]) {
+                                        onAssign(order.id, assignSelections[order.id]);
+                                        setAssignSelections((prev) => ({ ...prev, [order.id]: "" }));
+                                      }
+                                    }}
+                                    disabled={assigningId === order.id || !assignSelections[order.id]}
+                                    className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-300 font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+                                  >
+                                    {assigningId === order.id ? "Assigning..." : "Assign"}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <p className="text-dark-400 text-sm">Not assigned</p>
+                              {onAssign && (
+                                <div className="flex gap-2">
+                                  <select
+                                    value={assignSelections[order.id] || ""}
+                                    onChange={(e) => setAssignSelections((prev) => ({ ...prev, [order.id]: e.target.value }))}
+                                    className="flex-1 px-3 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-xs text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+                                  >
+                                    <option value="">Select delivery exec...</option>
+                                    {deliveryExecs.map((exec) => (
+                                      <option key={exec.id} value={exec.id}>{exec.name}</option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => {
+                                      if (assignSelections[order.id]) {
+                                        onAssign(order.id, assignSelections[order.id]);
+                                        setAssignSelections((prev) => ({ ...prev, [order.id]: "" }));
+                                      }
+                                    }}
+                                    disabled={assigningId === order.id || !assignSelections[order.id]}
+                                    className="px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-lg text-xs text-purple-300 font-medium hover:bg-purple-500/30 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                  >
+                                    {assigningId === order.id ? (
+                                      <><Loader2 className="w-3 h-3 animate-spin" /> Assigning</>
+                                    ) : (
+                                      <><UserCheck className="w-3 h-3" /> Assign</>
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+                              {!onAssign && (
+                                <p className="text-dark-500 text-xs">Login as admin to assign</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-gold-500/10 to-gold-500/5 border border-gold-500/20 rounded-xl p-4 space-y-3">
+                      <div className="bg-gradient-to-br from-gold-500/10 to-gold-500/5 border border-gold-500/20 rounded-xl p-4 space-y-3">
                       <h4 className="text-xs text-gold-400 uppercase tracking-wider font-semibold flex items-center gap-2">
                         <Package className="w-3.5 h-3.5" /> Items
                       </h4>

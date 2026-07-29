@@ -15,6 +15,8 @@ const reviewRoutes = require("./routes/reviews");
 const wishlistRoutes = require("./routes/wishlist");
 const newsletterRoutes = require("./routes/newsletter");
 const messageRoutes = require("./routes/messages");
+const deliveryRoutes = require("./routes/delivery");
+const sellerRoutes = require("./routes/seller");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,7 +35,7 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -56,6 +58,8 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/delivery", deliveryRoutes);
+app.use("/api/seller", sellerRoutes);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 

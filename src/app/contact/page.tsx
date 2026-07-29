@@ -60,7 +60,7 @@ export default function ContactPage() {
             {[
               { icon: MapPin, title: "Visit", details: ["Ganj Road / Khairtal Road", "Kishangarh Bas, Alwar, Rajasthan"] },
               { icon: Phone, title: "Call", details: ["9351396757"] },
-              { icon: Mail, title: "Email", details: ["batratechnologies@gmail.com", "batraronit32@gmail.com"] },
+              { icon: Mail, title: "Email", details: ["batratechnologies@gmail.com", "batra.ronit.08.11@gmail.com"] },
               { icon: Clock, title: "Hours", details: ["24/7 — All Days"] },
             ].map((item) => (
               <div key={item.title} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-6 flex gap-4 hover:border-gold-500/20 transition-colors">

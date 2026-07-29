@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, Shield, LayoutDashboard, Package, Users, MessageSquare, KeyRound, BarChart3, Newspaper } from "lucide-react";
+import { RefreshCw, Shield, LayoutDashboard, Package, Users, MessageSquare, KeyRound, BarChart3, Newspaper, Truck, Store } from "lucide-react";
 import { Tab } from "./types";
 
 const navItems: { key: Tab; label: string; icon: any }[] = [
@@ -11,6 +11,8 @@ const navItems: { key: Tab; label: string; icon: any }[] = [
   { key: "security", label: "Security", icon: KeyRound },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "newsletter", label: "Newsletter", icon: Newspaper },
+  { key: "delivery", label: "Delivery Exec", icon: Truck },
+  { key: "sellers", label: "BT Sellers", icon: Store },
 ];
 
 export { navItems };

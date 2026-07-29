@@ -14,6 +14,10 @@ import {
   MessageSquare,
   Heart,
   Loader2,
+  Send,
+  X,
+  Check,
+  LogIn,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { API, adminHeaders, statusColors, msgStatusColors, type Tab } from "./types";
@@ -61,6 +65,12 @@ export default function UsersTab({
   const [userFilter, setUserFilter] = useState("all");
   const [detailCache, setDetailCache] = useState<Record<string, any>>({});
   const [detailLoading, setDetailLoading] = useState<string | null>(null);
+  const [emailModalUser, setEmailModalUser] = useState<any>(null);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const now = new Date();
   const thisMonth = users.filter((u) => {
@@ -117,6 +127,63 @@ export default function UsersTab({
       setDetailLoading(null);
     }
   }, [expandedUser, detailCache, adminKey]);
+
+  const handleSendEmail = async () => {
+    if (!emailModalUser) return;
+    setEmailError("");
+    if (emailSubject.trim().length < 2) { setEmailError("Subject must be at least 2 characters"); return; }
+    if (emailMessage.trim().length < 3) { setEmailError("Message must be at least 3 characters"); return; }
+    setEmailSending(true);
+    try {
+      const res = await fetch(`${API}/api/admin/users/${emailModalUser.id}/email`, {
+        method: "POST",
+        headers: adminHeaders(adminKey),
+        body: JSON.stringify({ subject: emailSubject.trim(), message: emailMessage.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      setEmailSent(true);
+      setEmailSubject("");
+      setEmailMessage("");
+      setTimeout(() => { setEmailSent(false); setEmailModalUser(null); }, 2000);
+    } catch (err: any) {
+      setEmailError(err.message);
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const openEmailModal = (user: any) => {
+    setEmailModalUser(user);
+    setEmailSubject("");
+    setEmailMessage("");
+    setEmailSent(false);
+    setEmailError("");
+  };
+
+  const handleAccess = async (userId: string, role?: string) => {
+    try {
+      const res = await fetch(`${API}/api/admin/impersonate/${userId}`, {
+        method: "POST", headers: adminHeaders(adminKey),
+      });
+      if (!res.ok) return;
+      const { token, user } = await res.json();
+      const raw = localStorage.getItem("bt-accounts");
+      const accounts = raw ? JSON.parse(raw) : [];
+      const adminIdx = parseInt(localStorage.getItem("bt-current") || "0");
+      accounts.push({ token, user });
+      localStorage.setItem("bt-accounts", JSON.stringify(accounts));
+      localStorage.setItem("bt-current", String(accounts.length - 1));
+      localStorage.setItem("bt-token", token);
+      setTimeout(() => {
+        window.open(user.role === "SELLER" ? "/seller" : user.role === "DELIVERY" ? "/delivery" : "/", "_blank");
+      }, 50);
+      setTimeout(() => {
+        localStorage.setItem("bt-current", String(adminIdx));
+        localStorage.setItem("bt-token", accounts[adminIdx]?.token || "");
+      }, 2000);
+    } catch {}
+  };
 
   return (
     <div className="space-y-5">
@@ -245,6 +312,18 @@ export default function UsersTab({
                     </div>
                   </div>
 
+                  <div
+                    onClick={(e) => { e.stopPropagation(); if (user.email) openEmailModal(user); }}
+                    className={`shrink-0 p-2 rounded-lg transition-colors ${user.email ? "text-dark-400 hover:text-gold-400 hover:bg-dark-800 cursor-pointer" : "text-dark-700 cursor-not-allowed"}`}
+                    title={user.email ? `Email ${user.name}` : "No email"}
+                  >
+                    <Send className="w-4 h-4" />
+                  </div>
+
+                  <button onClick={(e) => { e.stopPropagation(); handleAccess(user.id, user.role); }} className="shrink-0 p-2 rounded-lg text-purple-400 hover:text-purple-300 hover:bg-dark-800 transition-colors" title="Access Account">
+                    <LogIn className="w-4 h-4" />
+                  </button>
+
                   {isExpanded ? (
                     <ChevronUp className="w-5 h-5 text-dark-400 shrink-0" />
                   ) : (
@@ -265,9 +344,19 @@ export default function UsersTab({
                         <>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 rounded-xl p-4 space-y-3">
-                              <h4 className="text-xs text-blue-400 uppercase tracking-wider font-semibold flex items-center gap-2">
-                                <Mail className="w-3.5 h-3.5" /> Contact Info
-                              </h4>
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs text-blue-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+                                  <Mail className="w-3.5 h-3.5" /> Contact Info
+                                </h4>
+                                {d.email && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openEmailModal(d); }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold-500/10 border border-gold-500/20 text-gold-400 text-[10px] font-semibold uppercase tracking-wider hover:bg-gold-500/20 transition-colors"
+                                  >
+                                    <Send className="w-3 h-3" /> Send Email
+                                  </button>
+                                )}
+                              </div>
                               <div className="space-y-2">
                                 <p className="text-white text-sm font-medium">{d.name}</p>
                                 <div className="flex items-center gap-2 text-dark-300 text-xs">
@@ -410,6 +499,84 @@ export default function UsersTab({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {emailModalUser && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => !emailSending && setEmailModalUser(null)}>
+          <div className="bg-dark-900 border border-dark-700/50 rounded-2xl w-full max-w-lg shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-dark-800/50">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+                  <Send className="w-4 h-4 text-gold-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-sm">Send Email</h3>
+                  <p className="text-dark-400 text-xs">To {emailModalUser.name}</p>
+                </div>
+              </div>
+              <button onClick={() => !emailSending && setEmailModalUser(null)} className="text-dark-400 hover:text-white transition-colors p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {emailSent ? (
+              <div className="p-8 text-center">
+                <div className="w-14 h-14 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-7 h-7 text-green-400" />
+                </div>
+                <p className="text-white font-semibold">Email Sent!</p>
+                <p className="text-dark-400 text-sm mt-1">Message delivered to {emailModalUser.email}</p>
+              </div>
+            ) : (
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="text-xs text-dark-400 uppercase tracking-wider mb-1.5 block">To</label>
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-dark-800/60 border border-dark-700/50 rounded-xl">
+                    <Mail className="w-3.5 h-3.5 text-dark-500" />
+                    <span className="text-white text-sm">{emailModalUser.email}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-dark-400 uppercase tracking-wider mb-1.5 block">Subject</label>
+                  <input
+                    type="text"
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder="e.g. Exclusive offer for you"
+                    className="w-full px-4 py-2.5 bg-dark-800/60 border border-dark-700/50 rounded-xl text-white text-sm placeholder:text-dark-500 focus:outline-none focus:border-gold-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-dark-400 uppercase tracking-wider mb-1.5 block">Message</label>
+                  <textarea
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    rows={5}
+                    placeholder="Write your message..."
+                    className="w-full px-4 py-3 bg-dark-800/60 border border-dark-700/50 rounded-xl text-white text-sm placeholder:text-dark-500 focus:outline-none focus:border-gold-500/50 resize-none"
+                  />
+                </div>
+                {emailError && <p className="text-red-400 text-sm">{emailError}</p>}
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={handleSendEmail}
+                    disabled={emailSending}
+                    className="flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 transition-all disabled:opacity-50"
+                  >
+                    {emailSending ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : <><Send className="w-4 h-4" /> Send Email</>}
+                  </button>
+                  <button
+                    onClick={() => setEmailModalUser(null)}
+                    disabled={emailSending}
+                    className="px-5 py-3 rounded-xl text-sm text-dark-400 hover:text-white border border-dark-700 hover:border-dark-500 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

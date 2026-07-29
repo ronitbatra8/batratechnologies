@@ -2,6 +2,7 @@
 
 import { Newspaper, UserCheck, UserX, Trash2 } from "lucide-react";
 import { adminHeaders } from "./types";
+import { API_URL } from "@/lib/api";
 
 export default function NewsletterTab({
   newsletter,
@@ -18,7 +19,7 @@ export default function NewsletterTab({
 
   async function handleToggle(id: string) {
     try {
-      const res = await fetch(`/api/newsletter/${id}/toggle`, {
+      const res = await fetch(`${API_URL}/newsletter/${id}/toggle`, {
         method: "PUT",
         headers: adminHeaders(adminKey),
       });
@@ -39,7 +40,7 @@ export default function NewsletterTab({
   async function handleDelete(id: string) {
     if (!confirm("Delete this subscriber?")) return;
     try {
-      const res = await fetch(`/api/newsletter/${id}`, {
+      const res = await fetch(`${API_URL}/newsletter/${id}`, {
         method: "DELETE",
         headers: adminHeaders(adminKey),
       });

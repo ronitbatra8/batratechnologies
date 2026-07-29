@@ -13,11 +13,9 @@ const statusColors: Record<string, string> = {
 export default function SecurityTab({
   passwordResets,
   adminKey,
-  onSelectUser,
 }: {
   passwordResets: any[];
   adminKey: string;
-  onSelectUser?: (userId: string) => void;
 }) {
   const completed = passwordResets.filter((r) => r.status === "completed").length;
   const pending = passwordResets.filter((r) => r.status === "requested").length;
@@ -60,8 +58,7 @@ export default function SecurityTab({
             {passwordResets.map((reset) => (
               <div
                 key={reset.id}
-                className={`px-6 py-5 hover:bg-dark-800/20 transition-colors ${reset.user?.id && onSelectUser ? "cursor-pointer group" : ""}`}
-                onClick={() => reset.user?.id && onSelectUser?.(reset.user.id)}
+                className={`px-6 py-5 hover:bg-dark-800/20 transition-colors`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>

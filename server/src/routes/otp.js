@@ -15,7 +15,7 @@ function validatePhone(phone) {
 
 router.post("/send-otp", async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role } = req.body;
     if (!name || !password || !email) {
       return res.status(400).json({ error: "Name, email and password are required" });
     }
@@ -59,8 +59,8 @@ router.post("/send-otp", async (req, res) => {
 
     await prisma.otp.upsert({
       where: { email },
-      update: { code, password: hashed, phone: normalizedPhone, name: name.trim(), expiresAt, createdAt: new Date() },
-      create: { email, code, password: hashed, phone: normalizedPhone, name: name.trim(), expiresAt },
+      update: { code, password: hashed, phone: normalizedPhone, name: name.trim(), role: role || "CUSTOMER", expiresAt, createdAt: new Date() },
+      create: { email, code, password: hashed, phone: normalizedPhone, name: name.trim(), role: role || "CUSTOMER", expiresAt },
     });
 
     try {
@@ -97,8 +97,11 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(400).json({ error: "Incorrect OTP. Please try again." });
     }
 
+    const validRoles = ["CUSTOMER", "DELIVERY", "SELLER"];
+    const userRole = validRoles.includes(record.role) ? record.role : "CUSTOMER";
+    const needsApproval = userRole === "DELIVERY" || userRole === "SELLER";
     const user = await prisma.user.create({
-      data: { name: record.name, email: record.email, password: record.password, phone: record.phone },
+      data: { name: record.name, email: record.email, password: record.password, phone: record.phone, role: userRole, approved: !needsApproval },
     });
 
     await prisma.otp.delete({ where: { email } });
@@ -106,7 +109,7 @@ router.post("/verify-otp", async (req, res) => {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "30d" });
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, approved: !needsApproval },
     });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });

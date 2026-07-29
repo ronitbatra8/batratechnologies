@@ -232,7 +232,7 @@ async function sendPasswordChangedEmail(to, name, method, ipAddress) {
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:16px;margin-bottom:20px;">
           <p style="color:#ef4444;font-size:13px;font-weight:bold;margin:0 0 6px;">⚠ Was this you?</p>
           <p style="color:#999;font-size:12px;margin:0;line-height:1.6;">If you did NOT change your password, your account may be compromised. Contact us immediately:</p>
-          <p style="color:#d4a853;font-size:13px;font-weight:bold;margin:8px 0 0;">📧 batraronit32@gmail.com &nbsp;|&nbsp; 📞 9351396757</p>
+          <p style="color:#d4a853;font-size:13px;font-weight:bold;margin:8px 0 0;">📧 batra.ronit.08.11@gmail.com &nbsp;|&nbsp; 📞 9351396757</p>
         </div>
         <p style="color:#666;font-size:12px;margin:0;">If this was you, no further action is needed.</p>
         ${FOOTER}
@@ -241,4 +241,47 @@ async function sendPasswordChangedEmail(to, name, method, ipAddress) {
   });
 }
 
-module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail };
+async function sendAdminEmail(to, name, subject, message) {
+  await transporter.sendMail({
+    from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `${escapeHtml(subject)} — Batra Technologies`,
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:40px;border-radius:16px;">
+        ${HEADER}
+        <p style="color:#999;font-size:14px;margin:0 0 4px;">Hello ${escapeHtml(name)},</p>
+        <p style="color:#999;font-size:14px;margin:0 0 20px;">You have received a message from the Batra Technologies team:</p>
+        <div style="background:#1a1a0a;border:1px solid #d4a85344;border-radius:12px;padding:20px;margin-bottom:24px;">
+          <p style="color:#d4a853;font-size:13px;font-weight:bold;margin:0 0 8px;">${escapeHtml(subject)}</p>
+          <p style="color:#ccc;font-size:13px;margin:0;white-space:pre-wrap;line-height:1.7;">${escapeHtml(message)}</p>
+        </div>
+        <p style="color:#666;font-size:12px;margin:0;">If you have any questions, feel free to reply to this email or contact us through the app.</p>
+        ${FOOTER}
+      </div>
+    `,
+  });
+}
+
+async function sendDeliveryCodeEmail(to, name, code, deliveryPersonName) {
+  if (!to) return;
+  await transporter.sendMail({
+    from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Delivery Verification Code — Batra Technologies",
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:40px;border-radius:16px;">
+        ${HEADER}
+        <p style="color:#999;font-size:14px;margin:0 0 4px;">Hello ${escapeHtml(name)},</p>
+        <p style="color:#999;font-size:14px;margin:0 0 20px;">Your order is out for delivery! Please share this code with the delivery executive:</p>
+        <div style="text-align:center;background:#1a1a0a;border:1px solid #d4a85344;border-radius:12px;padding:24px;margin-bottom:24px;">
+          <p style="color:#d4a853;font-size:32px;font-weight:bold;letter-spacing:8px;margin:0;">${code}</p>
+        </div>
+        <p style="color:#666;font-size:13px;margin:0 0 4px;">Delivery by: ${escapeHtml(deliveryPersonName)}</p>
+        <p style="color:#666;font-size:12px;margin:0;">Do not share this code with anyone except the delivery executive.</p>
+        ${FOOTER}
+      </div>
+    `,
+  });
+}
+
+module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail };

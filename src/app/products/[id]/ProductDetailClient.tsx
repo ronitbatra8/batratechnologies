@@ -1,12 +1,14 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { getProductById, products, getDiscountPercent } from "@/data/products";
+import type { Product } from "@/data/types";
+import { API_URL } from "@/lib/api";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/utils";
-import { Star, ShoppingCart, ChevronRight, Plus, Minus, Check, Shield, Truck, RotateCcw, Zap } from "lucide-react";
+import { Star, ShoppingCart, ChevronRight, Plus, Minus, Check, Shield, Truck, RotateCcw, Zap, Loader2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import CartNotification from "@/components/CartNotification";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -15,7 +17,9 @@ import { trackRecentlyViewed } from "@/components/RecentlyViewed";
 
 export default function ProductDetailClient() {
   const params = useParams();
-  const product = getProductById(params.id as string);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
   const { addToCart } = useCart();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
@@ -24,8 +28,36 @@ export default function ProductDetailClient() {
   const [showNotif, setShowNotif] = useState(false);
 
   useEffect(() => {
-    if (product) trackRecentlyViewed(product.id);
-  }, [product]);
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    const id = params.id as string;
+    const cached = getProductById(id);
+    if (cached) {
+      setProduct(cached);
+      setLoading(false);
+      trackRecentlyViewed(id);
+      return;
+    }
+    fetch(`${API_URL}/products/${id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setProduct(data);
+          trackRecentlyViewed(id);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 text-center">
+        <Loader2 className="w-10 h-10 text-gold-400 animate-spin mx-auto mb-4" />
+        <p className="text-dark-400">Loading product...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -116,19 +148,23 @@ export default function ProductDetailClient() {
             ))}
           </div>
 
-          <div className="flex items-center gap-4 mb-10">
-            <div className="flex items-center border border-dark-700 rounded-xl">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 hover:bg-dark-800 transition-colors rounded-l-xl text-dark-300"><Minus size={18} /></button>
-              <span className="px-5 py-3 font-semibold min-w-[60px] text-center text-white">{quantity}</span>
-              <button onClick={() => setQuantity(quantity + 1)} className="p-3 hover:bg-dark-800 transition-colors rounded-r-xl text-dark-300"><Plus size={18} /></button>
+          <div className="flex flex-col gap-3 mb-10">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center border border-dark-700 rounded-xl">
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-3 hover:bg-dark-800 transition-colors rounded-l-xl text-dark-300"><Minus size={18} /></button>
+                <span className="px-5 py-3 font-semibold min-w-[60px] text-center text-white">{quantity}</span>
+                <button onClick={() => setQuantity(quantity + 1)} className="p-3 hover:bg-dark-800 transition-colors rounded-r-xl text-dark-300"><Plus size={18} /></button>
+              </div>
+              <WishlistButton productId={product.id} />
             </div>
-            <button onClick={handleAddToCart} className={`flex-1 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${added ? "bg-green-500 text-white" : "bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 hover:shadow-lg hover:shadow-gold-500/20"}`}>
-              {added ? <><Check size={20} /> Added</> : <><ShoppingCart size={20} /> Add to Cart</>}
-            </button>
-            <button onClick={handleBuyNow} className="flex-1 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 border border-gold-500/30 text-gold-400 hover:bg-gold-500/10 hover:border-gold-500/50 transition-all duration-300">
-              <Zap size={20} /> Buy Now
-            </button>
-            <WishlistButton productId={product.id} />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button onClick={handleAddToCart} className={`flex-1 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${added ? "bg-green-500 text-white" : "bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 hover:shadow-lg hover:shadow-gold-500/20"}`}>
+                {added ? <><Check size={20} /> Added</> : <><ShoppingCart size={20} /> Add to Cart</>}
+              </button>
+              <button onClick={handleBuyNow} className="flex-1 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 border border-gold-500/30 text-gold-400 hover:bg-gold-500/10 hover:border-gold-500/50 transition-all duration-300">
+                <Zap size={20} /> Buy Now
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

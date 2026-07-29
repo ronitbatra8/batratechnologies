@@ -35,7 +35,7 @@ export default function Reveal({ children, direction = "up", delay = 0, duration
   return (
     <div
       ref={ref}
-      className={`transition-all ${className}`}
+      className={`transition-all overflow-hidden ${className}`}
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translate(0) scale(1)" : undefined,

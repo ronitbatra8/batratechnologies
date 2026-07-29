@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Truck, Store } from "lucide-react";
+
+const ROLES = [
+  { value: "CUSTOMER", label: "Customer", desc: "Browse and shop products", icon: User },
+  { value: "DELIVERY", label: "Delivery Executive", desc: "Deliver orders to customers", icon: Truck },
+  { value: "SELLER", label: "BT Seller", desc: "Sell your products on our platform", icon: Store },
+];
 
 function RegisterContent() {
   const searchParams = useSearchParams();
@@ -14,9 +20,20 @@ function RegisterContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("CUSTOMER");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedRole = sessionStorage.getItem("bt-register-role");
+      if (storedRole) {
+        setRole(storedRole);
+        sessionStorage.removeItem("bt-register-role");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (prefill) {
@@ -45,7 +62,7 @@ function RegisterContent() {
     try {
       await apiFetch("/auth/send-otp", {
         method: "POST",
-        body: JSON.stringify({ name: name.trim(), email, password, phone: cleaned || undefined }),
+        body: JSON.stringify({ name: name.trim(), email, password, phone: cleaned || undefined, role }),
       });
       router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err: any) {
@@ -66,6 +83,20 @@ function RegisterContent() {
         <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-8">
           {error && <p className="text-red-400 text-sm mb-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>}
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-xs text-dark-400 uppercase tracking-wider mb-3 font-medium">I want to join as</label>
+              <div className="grid grid-cols-3 gap-2">
+                {ROLES.map((r) => {
+                  const Icon = r.icon;
+                  return (
+                    <button type="button" key={r.value} onClick={() => setRole(r.value)} className={`flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border text-xs transition-all ${role === r.value ? "border-gold-500 bg-gold-500/10 text-gold-400" : "border-dark-700 bg-dark-800/50 text-dark-400 hover:border-dark-600"}`}>
+                      <Icon size={20} />
+                      <span className="font-medium">{r.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div>
               <label className="block text-xs text-dark-400 uppercase tracking-wider mb-2 font-medium">Full Name</label>
               <div className="relative">

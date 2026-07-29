@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
-import { Package, Clock, Check, Truck, ChevronRight, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
+import { Package, Clock, Check, Truck, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 
 interface OrderItem {
   productId: string;
@@ -154,7 +154,7 @@ export default function OrdersPage() {
             const expanded = expandedOrder === order.id;
             return (
               <div key={order.id} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl overflow-hidden hover:border-gold-500/20 transition-colors">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-dark-800/50">
+                <button onClick={() => setExpandedOrder(expanded ? null : order.id)} className="w-full flex items-center justify-between px-6 py-4 border-b border-dark-800/50 text-left hover:bg-white/[0.02] transition-colors">
                   <div className="flex items-center gap-4">
                     <div>
                       <p className="text-xs text-dark-500">Order #{order.id.slice(-8)}</p>
@@ -167,11 +167,9 @@ export default function OrdersPage() {
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
                     <span className="font-bold text-white">{formatPrice(order.totalAmount)}</span>
-                    <button onClick={() => setExpandedOrder(expanded ? null : order.id)} className="text-dark-500 hover:text-white transition-colors">
-                      {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
+                    {expanded ? <ChevronUp size={16} className="text-dark-400 shrink-0" /> : <ChevronDown size={16} className="text-dark-400 shrink-0" />}
                   </div>
-                </div>
+                </button>
 
                 {expanded && (
                   <div className="px-6 py-6 space-y-6 border-t border-dark-800/50">
@@ -182,14 +180,14 @@ export default function OrdersPage() {
 
                     <div className="space-y-3">
                       {order.items.map((item: OrderItem, idx: number) => (
-                        <div key={idx} className="flex items-center gap-4">
-                          <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                        <Link key={idx} href={`/products/${item.productId}`} className="flex items-center gap-4 p-2 -mx-2 rounded-xl hover:bg-dark-800/40 transition-colors group">
+                          <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover group-hover:ring-2 ring-gold-500/30 transition-all" />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-white">{item.name}</p>
+                            <p className="text-sm font-medium text-white group-hover:text-gold-400 transition-colors">{item.name}</p>
                             <p className="text-xs text-dark-500">Qty: {item.quantity}</p>
                           </div>
                           <span className="text-sm font-medium text-white">{formatPrice(item.price * item.quantity)}</span>
-                        </div>
+                        </Link>
                       ))}
                     </div>
 

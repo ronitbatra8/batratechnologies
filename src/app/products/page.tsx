@@ -2,7 +2,9 @@
 
 import { useState, useMemo, Suspense, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { products, categories } from "@/data/products";
+import { API_URL } from "@/lib/api";
+import { categories } from "@/data/products";
+import { Product } from "@/data/types";
 import ProductCard from "@/components/ProductCard";
 import { SlidersHorizontal, X, ChevronUp, ChevronDown, Search } from "lucide-react";
 
@@ -19,6 +21,16 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState("featured");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch(`${API_URL}/products`)
+      .then((r) => r.json())
+      .then((data) => { if (!data.error) setAllProducts(data); })
+      .catch(() => {})
+      .finally(() => setProductsLoaded(true));
+  }, []);
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
@@ -58,7 +70,7 @@ function ProductsContent() {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = [...allProducts];
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter((p) =>
@@ -80,9 +92,9 @@ function ProductsContent() {
       default: result.sort((a, b) => (b.badge ? 1 : 0) - (a.badge ? 1 : 0));
     }
     return result;
-  }, [selectedCategory, selectedBrands, sortBy, priceRange, searchQuery]);
+  }, [selectedCategory, selectedBrands, sortBy, priceRange, searchQuery, allProducts]);
 
-  const allBrands = Array.from(new Set(products.map((p) => p.brand).filter((b) => b !== "Batra Tech")));
+  const allBrands = Array.from(new Set(allProducts.map((p) => p.brand).filter((b) => b !== "Batra Tech")));
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 page-transition">
@@ -138,7 +150,7 @@ function ProductsContent() {
                   </button>
                   {categories.map((cat) => (
                     <button key={cat.slug} onClick={() => setSelectedCategory(cat.slug)} className={`block w-full text-left text-sm px-3 py-2.5 rounded-lg transition-all ${selectedCategory === cat.slug ? "bg-gold-500/10 text-gold-400 font-medium" : "text-dark-400 hover:text-white hover:bg-dark-800"}`}>
-                      {cat.name} <span className="text-dark-600 ml-1">({products.filter((p) => p.category === cat.slug).length})</span>
+                      {cat.name} <span className="text-dark-600 ml-1">({allProducts.filter((p) => p.category === cat.slug).length})</span>
                     </button>
                   ))}
                 </div>

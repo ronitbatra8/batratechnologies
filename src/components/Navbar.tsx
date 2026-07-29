@@ -4,16 +4,19 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { ShoppingCart, Search, Menu, X, User, LogOut, Package, ChevronDown, Plus, Check, Trash2, Crown, Heart, MessageSquare } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, User, LogOut, Package, ChevronDown, Plus, Check, Trash2, Crown, Heart, MessageSquare, Truck, Store } from "lucide-react";
 
 export default function Navbar() {
   const { totalItems } = useCart();
   const { user, logout, accounts, currentIndex, switchAccount, removeAccount } = useAuth();
-  const isOwner = user?.email === "batraronit32@gmail.com" || user?.phone === "9351396757";
+  const isOwner = user?.email === "batra.ronit.08.11@gmail.com" || user?.phone === "9351396757";
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -63,12 +66,12 @@ export default function Navbar() {
           <Link href="/products?focus=search" className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-dark-800 transition-colors group">
             <Search size={18} className="text-dark-300 group-hover:text-gold-400 transition-colors" />
           </Link>
-          {user && (
+          {mounted && user && (
             <Link href="/wishlist" className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-dark-800 transition-colors group">
               <Heart size={18} className="text-dark-300 group-hover:text-gold-400 transition-colors" />
             </Link>
           )}
-          {user ? (
+          {mounted && user ? (
             <div ref={userMenuRef} className="relative hidden md:block">
               <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 text-sm text-dark-300 hover:text-gold-400 transition-colors">
                 <div className="w-8 h-8 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
@@ -112,7 +115,27 @@ export default function Navbar() {
                   <Link href="/account" className="flex items-center gap-3 px-4 py-2.5 text-sm text-dark-300 hover:text-gold-400 hover:bg-dark-800 transition-colors" onClick={() => setUserMenuOpen(false)}>
                     <User size={16} /> My Account
                   </Link>
-                  {isOwner && (
+                  {user.role === "DELIVERY" && (
+                    <Link href="/delivery" className="flex items-center gap-3 px-4 py-2.5 text-sm text-dark-300 hover:text-gold-400 hover:bg-dark-800 transition-colors" onClick={() => setUserMenuOpen(false)}>
+                      <Truck size={16} /> Delivery Dashboard
+                    </Link>
+                  )}
+                  {user.role === "SELLER" && (
+                    <Link href="/seller" className="flex items-center gap-3 px-4 py-2.5 text-sm text-dark-300 hover:text-gold-400 hover:bg-dark-800 transition-colors" onClick={() => setUserMenuOpen(false)}>
+                      <Store size={16} /> Seller Dashboard
+                    </Link>
+                  )}
+                {user.role === "DELIVERY" && (
+                  <Link href="/delivery" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
+                    Delivery Dashboard
+                  </Link>
+                )}
+                {user.role === "SELLER" && (
+                  <Link href="/seller" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
+                    Seller Dashboard
+                  </Link>
+                )}
+                {isOwner && (
                     <Link href="/admin/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold-400 hover:text-gold-300 hover:bg-dark-800 transition-colors" onClick={() => setUserMenuOpen(false)}>
                       <Crown size={16} /> Owner Dashboard
                     </Link>
@@ -162,7 +185,7 @@ export default function Navbar() {
                 {item}
               </Link>
             ))}
-            {user ? (
+            {mounted && user ? (
               <>
                 <Link href="/account" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
                   My Account

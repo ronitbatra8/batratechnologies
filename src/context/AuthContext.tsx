@@ -20,6 +20,8 @@ interface User {
   name: string;
   email?: string;
   phone?: string;
+  role?: string;
+  approved?: boolean;
   createdAt?: string;
   savedAddresses?: SavedAddress[];
 }
@@ -34,8 +36,8 @@ interface AuthContextType {
   loading: boolean;
   accounts: StoredAccount[];
   currentIndex: number;
-  register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
-  login: (identifier: string, password: string, addMode?: boolean) => Promise<void>;
+  register: (data: { name: string; email: string; password: string; phone?: string; role?: string }) => Promise<void>;
+  login: (identifier: string, password: string, addMode?: boolean) => Promise<User>;
   logout: () => void;
   switchAccount: (index: number) => void;
   addAccount: (token: string, user: User) => void;
@@ -103,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { loadUser(); }, [loadUser]);
 
-  const register = async (data: { name: string; email: string; password: string; phone?: string }) => {
+  const register = async (data: { name: string; email: string; password: string; phone?: string; role?: string }) => {
     const res = await apiFetch("/auth/register", { method: "POST", body: JSON.stringify(data) });
     addAccount(res.token, res.user);
     localStorage.setItem("bt-token", res.token);
@@ -137,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     localStorage.setItem("bt-token", res.token);
     setUser(res.user);
+    return res.user;
   };
 
   const logout = () => {

@@ -55,8 +55,8 @@ router.put("/:id/toggle", adminAuth, async (req, res) => {
   try {
     const sub = await prisma.newsletter.findUnique({ where: { id: req.params.id } });
     if (!sub) return res.status(404).json({ error: "Subscriber not found" });
-    await prisma.newsletter.update({ where: { id: req.params.id }, data: { active: !sub.active } });
-    res.json({ ok: true });
+    const updated = await prisma.newsletter.update({ where: { id: req.params.id }, data: { active: !sub.active } });
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
   }

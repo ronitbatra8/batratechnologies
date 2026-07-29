@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/", auth, async (req, res) => {
   try {
-    const { items, shippingName, shippingPhone, shippingAddress, shippingCity, shippingState, shippingPincode } = req.body;
+    const { items, shippingName, shippingPhone, shippingAddress, shippingCity, shippingState, shippingPincode, paymentMethod } = req.body;
     if (!items || !items.length) return res.status(400).json({ error: "No items in order" });
     if (!shippingName || !shippingPhone || !shippingAddress || !shippingCity || !shippingState || !shippingPincode) {
       return res.status(400).json({ error: "Shipping details are required" });
@@ -25,7 +25,7 @@ router.post("/", auth, async (req, res) => {
       if (!product) return res.status(400).json({ error: `Product not found: ${productId}` });
       if (!product.inStock) return res.status(400).json({ error: `Product out of stock: ${product.name}` });
       verifiedTotal += product.price * qty;
-      verifiedItems.push({ productId: product.id, name: product.name, price: product.price, quantity: qty });
+      verifiedItems.push({ productId: product.id, name: product.name, price: product.price, quantity: qty, image: product.images?.[0] || "" });
     }
 
     const shipping = verifiedTotal >= 4999 ? 0 : 99;
@@ -42,7 +42,7 @@ router.post("/", auth, async (req, res) => {
         shippingCity,
         shippingState,
         shippingPincode,
-        paymentMethod: "COD",
+        paymentMethod: paymentMethod === "UPI" ? "UPI" : "COD",
         status: "confirmed",
       },
     });
@@ -68,7 +68,24 @@ router.get("/", auth, async (req, res) => {
       where: { userId: req.userId },
       orderBy: { createdAt: "desc" },
     });
-    res.json(orders);
+    const enriched = await Promise.all(orders.map(async (order) => {
+      const items = Array.isArray(order.items) ? order.items : [];
+      let needsUpdate = false;
+      const enrichedItems = await Promise.all(items.map(async (item) => {
+        const product = await prisma.product.findUnique({ where: { id: item.productId }, select: { images: true } });
+        const correctImage = product?.images?.[0] || "";
+        if (item.image !== correctImage) {
+          needsUpdate = true;
+          return { ...item, image: correctImage };
+        }
+        return item;
+      }));
+      if (needsUpdate) {
+        try { await prisma.order.update({ where: { id: order.id }, data: { items: enrichedItems } }); } catch {}
+      }
+      return { ...order, items: enrichedItems };
+    }));
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
   }

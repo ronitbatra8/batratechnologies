@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { Menu, X, RefreshCw } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
 import { Tab, API, adminHeaders } from "../components/types";
 import AuthGate from "../components/AuthGate";
 import Sidebar from "../components/Sidebar";
@@ -13,7 +12,8 @@ import MessagesTab from "../components/MessagesTab";
 import SecurityTab from "../components/SecurityTab";
 import AnalyticsTab from "../components/AnalyticsTab";
 import NewsletterTab from "../components/NewsletterTab";
-import UserDetailPanel from "../components/UserDetailPanel";
+import DeliveryExecTab from "../components/DeliveryExecTab";
+import SellersTab from "../components/SellersTab";
 
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
@@ -32,9 +32,6 @@ export default function AdminPage() {
   const [passwordResets, setPasswordResets] = useState<any[]>([]);
 
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [userDetail, setUserDetail] = useState<any>(null);
-  const [userDetailLoading, setUserDetailLoading] = useState(false);
   const [focusOrderId, setFocusOrderId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
@@ -74,17 +71,16 @@ export default function AdminPage() {
     setUpdatingId(null);
   }, [adminKey]);
 
-  const loadUserDetail = useCallback(async (userId: string) => {
-    setSelectedUserId(userId);
-    setUserDetailLoading(true);
-    setUserDetail(null);
+  const assignOrder = useCallback(async (orderId: string, deliveryId: string) => {
+    setUpdatingId(orderId);
     try {
-      const data = await fetch(`${API}/api/admin/users/${userId}`, { headers: adminHeaders(adminKey) }).then((r) => r.json());
-      if (data.error) { alert(data.error); setSelectedUserId(null); return; }
-      setUserDetail(data);
-    } catch { alert("Failed to load user details"); setSelectedUserId(null); }
-    setUserDetailLoading(false);
-  }, [adminKey]);
+      await fetch(`${API}/api/admin/orders/${orderId}/assign`, {
+        method: "PUT", headers: adminHeaders(adminKey), body: JSON.stringify({ deliveryId }),
+      });
+      loadAll();
+    } catch { alert("Failed to assign delivery executive"); }
+    setUpdatingId(null);
+  }, [adminKey, loadAll]);
 
   const handleSignOut = useCallback(() => {
     setAuthenticated(false);
@@ -93,8 +89,6 @@ export default function AdminPage() {
   }, []);
 
   const handleNavigateToTab = useCallback((targetTab: Tab, focusId?: string) => {
-    setSelectedUserId(null);
-    setUserDetail(null);
     setTab(targetTab);
     if (focusId && targetTab === "orders") {
       setFocusOrderId(focusId);
@@ -130,16 +124,16 @@ export default function AdminPage() {
       <main className="lg:ml-64 pt-28 lg:pt-8 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {tab === "overview" && <OverviewTab stats={stats} orders={orders} passwordResets={passwordResets} messages={messages} onNavigate={handleNavigateToTab} />}
-          {tab === "orders" && <OrdersTab orders={orders} updatingId={updatingId} onStatusUpdate={updateStatus} focusOrderId={focusOrderId} onFocusHandled={() => setFocusOrderId(null)} />}
+          {tab === "orders" && <OrdersTab orders={orders} updatingId={updatingId} onStatusUpdate={updateStatus} onAssign={assignOrder} focusOrderId={focusOrderId} onFocusHandled={() => setFocusOrderId(null)} adminKey={adminKey} />}
           {tab === "users" && <UsersTab users={users} adminKey={adminKey} onNavigate={handleNavigateToTab} />}
           {tab === "messages" && <MessagesTab messages={messages} adminKey={adminKey} setMessages={setMessages} />}
-          {tab === "security" && <SecurityTab passwordResets={passwordResets} adminKey={adminKey} onSelectUser={loadUserDetail} />}
+          {tab === "security" && <SecurityTab passwordResets={passwordResets} adminKey={adminKey} />}
           {tab === "analytics" && <AnalyticsTab analytics={analytics} />}
           {tab === "newsletter" && <NewsletterTab newsletter={newsletter} adminKey={adminKey} setNewsletter={setNewsletter} />}
+          {tab === "delivery" && <DeliveryExecTab adminKey={adminKey} />}
+          {tab === "sellers" && <SellersTab adminKey={adminKey} />}
         </div>
       </main>
-
-      <UserDetailPanel userDetail={userDetail} loading={userDetailLoading} onClose={() => { setSelectedUserId(null); setUserDetail(null); }} onNavigate={handleNavigateToTab} />
     </div>
   );
 }

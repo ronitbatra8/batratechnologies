@@ -16,7 +16,7 @@ function validatePhone(phone) {
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, role } = req.body;
     if (!name || !email || !password || !phone) {
       return res.status(400).json({ error: "Name, email, password and phone are required" });
     }
@@ -44,14 +44,17 @@ router.post("/register", async (req, res) => {
     if (phoneExists) {
       return res.status(400).json({ error: "Phone number already registered" });
     }
+    const validRoles = ["CUSTOMER", "DELIVERY", "SELLER"];
+    const userRole = validRoles.includes(role) ? role : "CUSTOMER";
+    const needsApproval = userRole === "DELIVERY" || userRole === "SELLER";
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed, phone: normalizedPhone },
+      data: { name, email, password: hashed, phone: normalizedPhone, role: userRole, approved: !needsApproval },
     });
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "30d" });
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, approved: !needsApproval },
     });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
@@ -88,7 +91,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "30d" });
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, approved: user.approved },
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -100,7 +103,7 @@ router.get("/me", auth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, name: true, email: true, phone: true, createdAt: true, savedAddresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] } },
+      select: { id: true, name: true, email: true, phone: true, role: true, approved: true, createdAt: true, savedAddresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] } },
     });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
@@ -115,7 +118,7 @@ router.put("/me", auth, async (req, res) => {
     const user = await prisma.user.update({
       where: { id: req.userId },
       data: { name, phone },
-      select: { id: true, name: true, email: true, phone: true, createdAt: true, savedAddresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] } },
+      select: { id: true, name: true, email: true, phone: true, role: true, approved: true, createdAt: true, savedAddresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] } },
     });
     res.json(user);
   } catch (err) {

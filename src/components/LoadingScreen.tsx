@@ -19,27 +19,27 @@ export default function LoadingScreen() {
 
   return (
     <div className={`fixed inset-0 z-[100] bg-dark-950 flex items-center justify-center transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
-      <div className="flex flex-col items-center select-none">
+      <div className="flex flex-col items-center select-none px-4">
 
         {/* Row 1: BT logo + BATRA side by side */}
-        <div className="flex items-center gap-3 md:gap-5">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-5">
           <div className="ld-bt-fall">
-            <div className="w-20 h-20 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-700 flex items-center justify-center text-dark-950 font-bold text-3xl md:text-5xl font-display shadow-2xl shadow-gold-500/40 ld-bt-squash">
+            <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gold-400 to-gold-700 flex items-center justify-center text-dark-950 font-bold text-2xl sm:text-3xl md:text-5xl font-display shadow-2xl shadow-gold-500/40 ld-bt-squash">
               BT
             </div>
           </div>
           <div className="ld-batra">
-            <span className="text-white text-5xl md:text-8xl font-display font-bold tracking-tight">
+            <span className="text-white text-4xl sm:text-5xl md:text-8xl font-display font-bold tracking-tight">
               BATRA
             </span>
           </div>
         </div>
 
         {/* Row 2: TECHNOLOGIES + headphone hanging on T */}
-        <div className="ld-tech-row">
+        <div className="ld-tech-row relative overflow-visible">
           {/* Headphone SVG — hangs on the letter T like a wall nail */}
-          <div className="ld-headphone absolute" style={{ left: "-38px", top: "0px" }}>
-            <svg width="130" height="160" viewBox="0 0 130 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: "rotate(-10deg)" }}>
+          <div className="ld-headphone absolute" style={{ left: "-20px", top: "-10px" }}>
+            <svg className="w-[70px] h-[90px] sm:w-[90px] sm:h-[110px] md:w-[130px] md:h-[160px]" viewBox="0 0 130 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: "rotate(-10deg)" }}>
               <defs>
                 <linearGradient id="ldHbGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#e4e4e7" />
@@ -105,10 +105,10 @@ export default function LoadingScreen() {
             </svg>
           </div>
 
-          <span className="text-dark-400 text-5xl md:text-8xl font-display font-bold tracking-tight relative">
+          <span className="text-dark-400 text-4xl sm:text-5xl md:text-8xl font-display font-bold tracking-tight relative">
             T
           </span>
-          <span className="text-dark-400 text-5xl md:text-8xl font-display font-bold tracking-tight">
+          <span className="text-dark-400 text-4xl sm:text-5xl md:text-8xl font-display font-bold tracking-tight">
             ECHNOLOGIES
           </span>
         </div>

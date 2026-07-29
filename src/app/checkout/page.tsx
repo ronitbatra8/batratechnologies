@@ -23,6 +23,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
   const [saveAddress, setSaveAddress] = useState(true);
   const [addressLabel, setAddressLabel] = useState("Home");
+  const [paymentMethod, setPaymentMethod] = useState("COD");
 
   const [shipping, setShipping] = useState({
     name: "",
@@ -64,8 +65,9 @@ export default function CheckoutPage() {
     } catch {}
   };
 
+  const shippingCost = totalPrice > 4999 ? 0 : 99;
   const tax = totalPrice * 0.18;
-  const total = totalPrice + tax;
+  const total = totalPrice + shippingCost + tax;
 
   if (!user) {
     return (
@@ -139,11 +141,13 @@ export default function CheckoutPage() {
           shippingCity: shipping.city,
           shippingState: shipping.state,
           shippingPincode: shipping.pincode,
+          paymentMethod,
         }),
       });
       setOrderData(data);
       clearCart();
       setOrderPlaced(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       setTimeout(() => setSuccessStep(1), 300);
       setTimeout(() => setSuccessStep(2), 800);
       setTimeout(() => setSuccessStep(3), 1200);
@@ -166,7 +170,7 @@ export default function CheckoutPage() {
           </div>
           <div className={`transition-all duration-500 ${successStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
             <h1 className="text-4xl font-display font-bold text-white mb-3">Order Confirmed</h1>
-            <p className="text-dark-400 mb-2">Thank you for your purchase. Pay on delivery.</p>
+            <p className="text-dark-400 mb-2">{paymentMethod === "UPI" ? "Pay via UPI at delivery." : "Pay on delivery."}</p>
             <p className="text-xs text-dark-600 mb-10">Order #{orderData?.id?.slice(-8) || "BT" + Date.now().toString().slice(-8)}</p>
             <div className="flex gap-4 justify-center">
               <Link href="/orders" className="bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 px-8 py-4 rounded-xl font-semibold inline-flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-gold-500/20">
@@ -311,7 +315,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="bg-dark-800/50 rounded-xl p-4 text-sm space-y-2">
                   <div className="flex justify-between"><span className="text-dark-400">Subtotal</span><span className="text-white">{formatPrice(totalPrice)}</span></div>
-                  <div className="flex justify-between"><span className="text-dark-400">Shipping</span><span className="text-white">Free</span></div>
+                  <div className="flex justify-between"><span className="text-dark-400">Shipping</span><span className="text-white">{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span></div>
                   <div className="flex justify-between"><span className="text-dark-400">Tax (18% GST)</span><span className="text-white">{formatPrice(tax)}</span></div>
                   <div className="border-t border-dark-700 pt-2 flex justify-between font-bold text-lg"><span className="text-white">Total</span><span className="text-white">{formatPrice(total)}</span></div>
                 </div>
@@ -324,11 +328,27 @@ export default function CheckoutPage() {
                   <p className="text-white">{shipping.city}, {shipping.state} - {shipping.pincode}</p>
                   <p className="text-dark-500 mt-1">Phone: {shipping.phone}</p>
                 </div>
-                <div className="bg-gold-500/5 border border-gold-500/20 rounded-xl p-4 flex items-center gap-3">
-                  <Truck size={20} className="text-gold-500 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-gold-400">Cash on Delivery</p>
-                    <p className="text-xs text-dark-400">Pay when your order arrives</p>
+                <div className="space-y-3">
+                  <p className="text-xs text-dark-400 uppercase tracking-wider font-medium">Payment Method</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button type="button" onClick={() => setPaymentMethod("COD")} className={`p-4 rounded-xl border text-left transition-all ${paymentMethod === "COD" ? "bg-gold-500/10 border-gold-500/30" : "bg-dark-800/50 border-dark-700/50 hover:border-dark-600"}`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "COD" ? "border-gold-500" : "border-dark-600"}`}>
+                          {paymentMethod === "COD" && <div className="w-2 h-2 rounded-full bg-gold-500" />}
+                        </div>
+                        <span className="text-sm font-medium text-white">Cash on Delivery</span>
+                      </div>
+                      <p className="text-xs text-dark-400 ml-6">Pay with cash when delivered</p>
+                    </button>
+                    <button type="button" onClick={() => setPaymentMethod("UPI")} className={`p-4 rounded-xl border text-left transition-all ${paymentMethod === "UPI" ? "bg-purple-500/10 border-purple-500/30" : "bg-dark-800/50 border-dark-700/50 hover:border-dark-600"}`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "UPI" ? "border-purple-500" : "border-dark-600"}`}>
+                          {paymentMethod === "UPI" && <div className="w-2 h-2 rounded-full bg-purple-500" />}
+                        </div>
+                        <span className="text-sm font-medium text-white">UPI on Delivery</span>
+                      </div>
+                      <p className="text-xs text-dark-400 ml-6">Pay via UPI at your doorstep</p>
+                    </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-dark-500">
@@ -358,7 +378,7 @@ export default function CheckoutPage() {
             </div>
             <div className="border-t border-dark-800 pt-3 space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-dark-400">Subtotal</span><span className="text-white">{formatPrice(totalPrice)}</span></div>
-              <div className="flex justify-between"><span className="text-dark-400">Shipping</span><span className="text-white">Free</span></div>
+              <div className="flex justify-between"><span className="text-dark-400">Shipping</span><span className="text-white">{shippingCost === 0 ? "Free" : formatPrice(shippingCost)}</span></div>
               <div className="flex justify-between"><span className="text-dark-400">Tax (18% GST)</span><span className="text-white">{formatPrice(tax)}</span></div>
               <div className="border-t border-dark-800 pt-2 flex justify-between font-bold"><span className="text-white">Total</span><span className="text-white">{formatPrice(total)}</span></div>
             </div>
