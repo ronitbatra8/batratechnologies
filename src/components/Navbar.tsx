@@ -125,16 +125,6 @@ export default function Navbar() {
                       <Store size={16} /> Seller Dashboard
                     </Link>
                   )}
-                {user.role === "DELIVERY" && (
-                  <Link href="/delivery" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
-                    Delivery Dashboard
-                  </Link>
-                )}
-                {user.role === "SELLER" && (
-                  <Link href="/seller" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
-                    Seller Dashboard
-                  </Link>
-                )}
                 {isOwner && (
                     <Link href="/admin/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold-400 hover:text-gold-300 hover:bg-dark-800 transition-colors" onClick={() => setUserMenuOpen(false)}>
                       <Crown size={16} /> Owner Dashboard
@@ -190,6 +180,16 @@ export default function Navbar() {
                 <Link href="/account" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
                   My Account
                 </Link>
+                {user.role === "DELIVERY" && (
+                  <Link href="/delivery" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
+                    Delivery Dashboard
+                  </Link>
+                )}
+                {user.role === "SELLER" && (
+                  <Link href="/seller" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
+                    Seller Dashboard
+                  </Link>
+                )}
                 {isOwner && (
                   <Link href="/admin/orders" className="block py-3 text-gold-400 hover:text-gold-300 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
                     Owner Dashboard
