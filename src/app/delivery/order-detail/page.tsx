@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { ArrowLeft, Package, MapPin, Phone, Mail, ShoppingBag, ShieldCheck, Send, XCircle } from "lucide-react";
 import Link from "next/link";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function DeliveryOrderDetail() {
   return <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-2 border-gold-500/20 border-t-gold-500 rounded-full animate-spin" /></div>}><DeliveryOrderDetailInner /></Suspense>;
@@ -23,6 +24,7 @@ function DeliveryOrderDetailInner() {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -56,10 +58,10 @@ function DeliveryOrderDetailInner() {
   };
 
   const handleCancelDelivery = async () => {
-    if (!confirm("Are you sure you want to cancel delivery of this order? It will be returned to the unassigned pool for another executive.")) return;
     setCancelling(true); setError(""); setMessage("");
     try {
       await apiFetch(`/delivery/orders/${id}/cancel-delivery`, { method: "POST" });
+      setShowCancelModal(false);
       setMessage("Delivery cancelled! Redirecting...");
       setTimeout(() => router.push("/delivery"), 1500);
     } catch (e: any) { setError(e.message || "Failed to cancel delivery"); }
@@ -137,7 +139,7 @@ function DeliveryOrderDetailInner() {
                 </div>
               )}
               <div className="mt-4 pt-4 border-t border-dark-800/50">
-                <button onClick={handleCancelDelivery} disabled={cancelling} className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                <button onClick={() => setShowCancelModal(true)} disabled={cancelling} className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                   {cancelling ? "Cancelling..." : <><XCircle size={16} /> Cancel Delivery — Return to Pool</>}
                 </button>
               </div>
@@ -153,6 +155,16 @@ function DeliveryOrderDetailInner() {
           )}
         </div>
       </div>
+      <ConfirmModal
+        open={showCancelModal}
+        title="Cancel Delivery?"
+        message="This order will be returned to the unassigned pool and another executive can pick it up."
+        confirmLabel="Yes, Cancel Delivery"
+        variant="danger"
+        loading={cancelling}
+        onConfirm={handleCancelDelivery}
+        onCancel={() => setShowCancelModal(false)}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import { Package, Clock, Check, Truck, ChevronDown, ChevronUp, MessageCircle, X, RotateCcw, AlertTriangle } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface OrderItem {
   productId: string;
@@ -117,23 +118,26 @@ export default function OrdersPage() {
   }, [user, authLoading, router]);
 
   const [actionMsg, setActionMsg] = useState<{ id: string; text: string; error?: boolean } | null>(null);
+  const [modalState, setModalState] = useState<{ type: "cancel" | "return"; orderId: string } | null>(null);
+  const [returnReason, setReturnReason] = useState("");
 
   const handleCancelOrder = async (orderId: string) => {
-    if (!confirm("Are you sure you want to cancel this order?")) return;
     try {
       await apiFetch(`/orders/${orderId}/cancel`, { method: "POST", body: JSON.stringify({ reason: "Cancelled by customer" }), headers: { "Content-Type": "application/json" } });
       setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "cancelled" } : o));
+      setModalState(null);
       setActionMsg({ id: orderId, text: "Order cancelled successfully" });
       setTimeout(() => setActionMsg(null), 3000);
     } catch (e: any) { setActionMsg({ id: orderId, text: e.message || "Failed to cancel", error: true }); setTimeout(() => setActionMsg(null), 3000); }
   };
 
   const handleReturnRequest = async (orderId: string) => {
-    const reason = prompt("Please enter the reason for return:");
-    if (!reason || !reason.trim()) return;
+    if (!returnReason.trim()) return;
     try {
-      await apiFetch(`/orders/${orderId}/request-return`, { method: "POST", body: JSON.stringify({ reason: reason.trim() }), headers: { "Content-Type": "application/json" } });
+      await apiFetch(`/orders/${orderId}/request-return`, { method: "POST", body: JSON.stringify({ reason: returnReason.trim() }), headers: { "Content-Type": "application/json" } });
       setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "return_requested" } : o));
+      setModalState(null);
+      setReturnReason("");
       setActionMsg({ id: orderId, text: "Return requested. Admin will review." });
       setTimeout(() => setActionMsg(null), 3000);
     } catch (e: any) { setActionMsg({ id: orderId, text: e.message || "Failed to request return", error: true }); setTimeout(() => setActionMsg(null), 3000); }
@@ -236,12 +240,12 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {order.status === "confirmed" && (
-                          <button onClick={() => handleCancelOrder(order.id)} className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
+                          <button onClick={() => setModalState({ type: "cancel", orderId: order.id })} className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
                             <X size={16} /> Cancel Order
                           </button>
                         )}
                         {canReturn(order) && (
-                          <button onClick={() => handleReturnRequest(order.id)} className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
+                          <button onClick={() => { setReturnReason(""); setModalState({ type: "return", orderId: order.id }); }} className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
                             <RotateCcw size={16} /> Request Return
                           </button>
                         )}
@@ -269,6 +273,29 @@ export default function OrdersPage() {
           })}
         </div>
       )}
+      <ConfirmModal
+        open={modalState?.type === "cancel"}
+        title="Cancel Order?"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        confirmLabel="Yes, Cancel Order"
+        variant="danger"
+        onConfirm={() => modalState && handleCancelOrder(modalState.orderId)}
+        onCancel={() => setModalState(null)}
+      />
+      <ConfirmModal
+        open={modalState?.type === "return"}
+        title="Request Return"
+        message="Please tell us why you'd like to return this order. The admin will review your request."
+        confirmLabel="Submit Return Request"
+        variant="default"
+        requireInput
+        inputLabel="Reason for return"
+        inputPlaceholder="e.g., Product is damaged, Wrong item received..."
+        inputValue={returnReason}
+        onInputChange={setReturnReason}
+        onConfirm={() => modalState && handleReturnRequest(modalState.orderId)}
+        onCancel={() => { setModalState(null); setReturnReason(""); }}
+      />
     </div>
   );
 }
