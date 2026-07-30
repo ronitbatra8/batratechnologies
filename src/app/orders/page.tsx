@@ -65,7 +65,9 @@ const statusIcons: Record<string, any> = {
 
 function OrderTrackingTimeline({ status }: { status: string }) {
   const isCancelled = status === "cancelled";
-  const currentIdx = statusSteps.findIndex((s) => s.key === status);
+  const isReturnFlow = status === "return_requested" || status === "returned";
+  const steps = isReturnFlow ? statusSteps : statusSteps.filter(s => s.key !== "return_requested" && s.key !== "returned");
+  const currentIdx = steps.findIndex((s) => s.key === status);
 
   if (isCancelled) {
     return (
@@ -75,9 +77,49 @@ function OrderTrackingTimeline({ status }: { status: string }) {
     );
   }
 
+  if (isReturnFlow) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-1 w-full">
+          {steps.slice(0, 5).map((step, i) => {
+            const done = true;
+            return (
+              <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                <div className="flex items-center w-full">
+                  {i > 0 && <div className="flex-1 h-0.5 bg-gold-500" />}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-gold-500 text-dark-950"><step.icon size={14} /></div>
+                  {i < 4 && <div className="flex-1 h-0.5 bg-gold-500" />}
+                </div>
+                <p className="text-[10px] mt-1.5 font-medium text-center text-gold-400">{step.label}</p>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-1 w-full">
+          {steps.slice(5).map((step, i) => {
+            const done = status === "returned" || (status === "return_requested" && i === 0);
+            const isCurrent = (status === "return_requested" && i === 0) || (status === "returned" && i === 1);
+            return (
+              <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                <div className="flex items-center w-full">
+                  <div className={`flex-1 h-0.5 ${i > 0 && done ? "bg-purple-500" : "bg-dark-700"}`} />
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-purple-500 text-white" : "bg-dark-800 text-dark-600 border border-dark-700"} ${isCurrent ? "ring-2 ring-purple-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
+                    <step.icon size={14} />
+                  </div>
+                  {i === 0 && <div className={`flex-1 h-0.5 ${done && status === "returned" ? "bg-purple-500" : "bg-dark-700"}`} />}
+                </div>
+                <p className={`text-[10px] mt-1.5 font-medium text-center ${done ? "text-purple-400" : "text-dark-600"}`}>{step.label}</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-1 w-full">
-      {statusSteps.map((step, i) => {
+      {steps.map((step, i) => {
         const done = i <= currentIdx;
         const isCurrent = i === currentIdx;
         return (
@@ -87,7 +129,7 @@ function OrderTrackingTimeline({ status }: { status: string }) {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-gold-500 text-dark-950" : "bg-dark-800 text-dark-600 border border-dark-700"} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
                 <step.icon size={14} />
               </div>
-              {i < statusSteps.length - 1 && <div className={`flex-1 h-0.5 ${i < currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
+              {i < steps.length - 1 && <div className={`flex-1 h-0.5 ${i < currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
             </div>
             <p className={`text-[10px] mt-1.5 font-medium text-center ${done ? "text-gold-400" : "text-dark-600"}`}>{step.label}</p>
           </div>
