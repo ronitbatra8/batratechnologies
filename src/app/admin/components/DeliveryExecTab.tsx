@@ -69,7 +69,7 @@ export default function DeliveryExecTab({ adminKey }: { adminKey: string }) {
     await loadDetail(id);
   };
 
-  const withOrders = execs.filter(e => (e._count?.orders ?? 0) > 0).length;
+  const withOrders = execs.filter(e => (e._count?.assignedOrders ?? 0) > 0).length;
   const approved = execs.filter(e => e.approved).length;
   const pending = execs.filter(e => !e.approved).length;
 
@@ -92,7 +92,7 @@ export default function DeliveryExecTab({ adminKey }: { adminKey: string }) {
     if (filter === "all") return true;
     if (filter === "approved") return e.approved;
     if (filter === "pending") return !e.approved;
-    if (filter === "active") return (e._count?.orders ?? 0) > 0;
+    if (filter === "active") return (e._count?.assignedOrders ?? 0) > 0;
     return true;
   });
 
@@ -147,7 +147,7 @@ export default function DeliveryExecTab({ adminKey }: { adminKey: string }) {
             const isExpanded = expandedId === exec.id;
             const detail = execDetail[exec.id];
             const orders = detail?.orders || [];
-            const orderCount = exec._count?.orders ?? 0;
+            const orderCount = exec._count?.assignedOrders ?? 0;
             const statusGrad = exec.approved ? "from-green-500/15 to-green-500/5" : "from-yellow-500/15 to-yellow-500/5";
             const statusBorder = exec.approved ? "border-l-green-400" : "border-l-yellow-400";
 
