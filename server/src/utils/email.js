@@ -120,6 +120,9 @@ const STATUS_LABELS = {
   out_for_delivery: { text: "Out for Delivery", color: "#f59e0b" },
   delivered: { text: "Delivered", color: "#22c55e" },
   cancelled: { text: "Cancelled", color: "#ef4444" },
+  return_requested: { text: "Return Requested", color: "#eab308" },
+  return_pickup_out: { text: "Return Pickup Out", color: "#f59e0b" },
+  returned: { text: "Returned", color: "#a855f7" },
 };
 
 async function sendOrderStatusUpdate(to, name, order, oldStatus) {
@@ -285,6 +288,28 @@ async function sendDeliveryCodeEmail(to, name, code, deliveryPersonName) {
   });
 }
 
+async function sendReturnCodeEmail(to, name, code, deliveryPersonName) {
+  if (!to) return;
+  await transporter.sendMail({
+    from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Return Pickup Verification Code — Batra Technologies",
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:40px;border-radius:16px;">
+        ${HEADER}
+        <p style="color:#999;font-size:14px;margin:0 0 4px;">Hello ${escapeHtml(name)},</p>
+        <p style="color:#999;font-size:14px;margin:0 0 20px;">A delivery executive is coming to pick up your return. Please share this code with them:</p>
+        <div style="text-align:center;background:#1a1a0a;border:1px solid #a855f744;border-radius:12px;padding:24px;margin-bottom:24px;">
+          <p style="color:#a855f7;font-size:32px;font-weight:bold;letter-spacing:8px;margin:0;">${code}</p>
+        </div>
+        <p style="color:#666;font-size:13px;margin:0 0 4px;">Pickup by: ${escapeHtml(deliveryPersonName)}</p>
+        <p style="color:#666;font-size:12px;margin:0;">Do not share this code with anyone except the delivery executive.</p>
+        ${FOOTER}
+      </div>
+    `,
+  });
+}
+
 async function sendAbandonedCartEmail(to, name, items) {
   if (!to) return;
   const itemList = (items || []).slice(0, 5).map((i) =>
@@ -318,4 +343,4 @@ async function sendAbandonedCartEmail(to, name, items) {
   });
 }
 
-module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail, sendAbandonedCartEmail };
+module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail, sendReturnCodeEmail, sendAbandonedCartEmail };

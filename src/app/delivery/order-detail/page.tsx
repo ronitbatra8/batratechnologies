@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
-import { ArrowLeft, Package, MapPin, Phone, Mail, ShoppingBag, ShieldCheck, Send, XCircle } from "lucide-react";
+import { ArrowLeft, Package, MapPin, Phone, Mail, ShoppingBag, ShieldCheck, Send, XCircle, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import ConfirmModal from "@/components/ConfirmModal";
 
@@ -25,6 +25,10 @@ function DeliveryOrderDetailInner() {
   const [verifying, setVerifying] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [returnCode, setReturnCode] = useState("");
+  const [returnCodeSent, setReturnCodeSent] = useState(false);
+  const [sendingReturnCode, setSendingReturnCode] = useState(false);
+  const [verifyingReturnCode, setVerifyingReturnCode] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -33,7 +37,7 @@ function DeliveryOrderDetailInner() {
     if (!user) { router.push("/login"); return; }
     if (user.role !== "DELIVERY") { router.push("/"); return; }
     if (!id) return;
-    apiFetch(`/delivery/orders/${id}`).then(data => { setOrder(data); if (data.deliveryCode === "SENT") setCodeSent(true); }).catch(() => router.push("/delivery")).finally(() => setFetching(false));
+    apiFetch(`/delivery/orders/${id}`).then(data => { setOrder(data); if (data.deliveryCode === "SENT") setCodeSent(true); if (data.status === "return_pickup_out") setReturnCodeSent(true); }).catch(() => router.push("/delivery")).finally(() => setFetching(false));
   }, [user, loading, router, id]);
 
   const handleSendCode = async () => {
@@ -55,6 +59,27 @@ function DeliveryOrderDetailInner() {
       setOrder((prev: any) => ({ ...prev, status: "delivered" }));
     } catch (e: any) { setError(e.message || "Invalid code"); }
     finally { setVerifying(false); }
+  };
+
+  const handleSendReturnCode = async () => {
+    setSendingReturnCode(true); setError(""); setMessage("");
+    try {
+      await apiFetch(`/delivery/orders/${id}/send-return-code`, { method: "POST" });
+      setReturnCodeSent(true);
+      setMessage("Return pickup code sent to customer's email!");
+    } catch (e: any) { setError(e.message || "Failed to send code"); }
+    finally { setSendingReturnCode(false); }
+  };
+
+  const handleVerifyReturnCode = async () => {
+    setVerifyingReturnCode(true); setError(""); setMessage("");
+    try {
+      await apiFetch(`/delivery/orders/${id}/verify-return-code`, { method: "POST", body: JSON.stringify({ code: returnCode }), headers: { "Content-Type": "application/json" } });
+      setMessage("Return pickup completed! Order marked as returned.");
+      setReturnCode("");
+      setOrder((prev: any) => ({ ...prev, status: "returned" }));
+    } catch (e: any) { setError(e.message || "Invalid code"); }
+    finally { setVerifyingReturnCode(false); }
   };
 
   const handleCancelDelivery = async () => {
@@ -82,7 +107,7 @@ function DeliveryOrderDetailInner() {
             <p className="text-xs text-dark-400 font-medium">ORDER #{order.id.slice(-8).toUpperCase()}</p>
             <p className="text-2xl font-display font-bold text-white">Delivery Details</p>
           </div>
-          <span className={`ml-auto px-4 py-1.5 rounded-full text-xs font-semibold border ${order.status === "delivered" ? "text-green-400 bg-green-500/10 border-green-500/20" : order.status === "out_for_delivery" ? "text-orange-400 bg-orange-500/10 border-orange-500/20" : order.status === "shipped" ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}`}>{order.status === "out_for_delivery" ? "OUT FOR DELIVERY" : order.status.toUpperCase()}</span>
+          <span className={`ml-auto px-4 py-1.5 rounded-full text-xs font-semibold border ${order.status === "delivered" ? "text-green-400 bg-green-500/10 border-green-500/20" : order.status === "out_for_delivery" ? "text-orange-400 bg-orange-500/10 border-orange-500/20" : order.status === "shipped" ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : order.status === "returned" ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : order.status === "return_pickup_out" ? "text-orange-400 bg-orange-500/10 border-orange-500/20" : order.status === "return_requested" ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}`}>{order.status === "out_for_delivery" ? "OUT FOR DELIVERY" : order.status === "return_pickup_out" ? "RETURN PICKUP OUT" : order.status === "return_requested" ? "RETURN REQUESTED" : order.status.toUpperCase()}</span>
         </div>
 
         <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-6 space-y-6">
@@ -117,7 +142,7 @@ function DeliveryOrderDetailInner() {
             ))}</div>
           </div>
 
-          {order.status !== "delivered" && order.status !== "cancelled" && (
+          {(order.status === "shipped" || order.status === "out_for_delivery") && (
             <div>
               <h2 className="text-white font-semibold mb-4 flex items-center gap-2"><ShieldCheck size={16} className="text-gold-400" /> Delivery Verification</h2>
               {!codeSent ? (
@@ -148,9 +173,46 @@ function DeliveryOrderDetailInner() {
             </div>
           )}
 
+          {(order.status === "return_requested" || order.status === "return_pickup_out") && (
+            <div>
+              <h2 className="text-white font-semibold mb-4 flex items-center gap-2"><RotateCcw size={16} className="text-purple-400" /> Return Pickup Verification</h2>
+              {!returnCodeSent ? (
+                <div>
+                  <p className="text-dark-400 text-sm mb-4">Send a verification code to the customer&apos;s email. The customer will share this code with you for the return pickup.</p>
+                  <button onClick={handleSendReturnCode} disabled={sendingReturnCode} className="w-full bg-purple-500 hover:bg-purple-400 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    {sendingReturnCode ? "Sending..." : <><Send size={16} /> Send Return Pickup Code</>}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-dark-400 text-sm mb-4">Ask the customer for the 6-digit code sent to their email for the return pickup.</p>
+                  <div className="flex gap-2 mb-3">
+                    <input type="text" value={returnCode} onChange={e => setReturnCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter 6-digit code" maxLength={6} className="flex-1 bg-dark-800 border border-dark-700 rounded-xl px-4 py-3.5 text-white text-center text-2xl tracking-[8px] font-mono focus:outline-none focus:border-purple-500 transition-colors" />
+                  </div>
+                  <button onClick={handleVerifyReturnCode} disabled={verifyingReturnCode || returnCode.length !== 6} className="w-full bg-purple-500 hover:bg-purple-400 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                    {verifyingReturnCode ? "Verifying..." : <><RotateCcw size={16} /> Verify & Complete Return</>}
+                  </button>
+                </div>
+              )}
+              <div className="mt-4 pt-4 border-t border-dark-800/50">
+                <button onClick={() => setShowCancelModal(true)} disabled={cancelling} className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                  {cancelling ? "Cancelling..." : <><XCircle size={16} /> Cancel Return Pickup — Return to Pool</>}
+                </button>
+              </div>
+              {error && <p className="text-red-400 text-sm mt-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>}
+              {message && <p className="text-green-400 text-sm mt-3 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">{message}</p>}
+            </div>
+          )}
+
           {order.status === "delivered" && (
             <div className="text-center py-4">
               <p className="text-green-400 text-sm font-medium">This order has been delivered.</p>
+            </div>
+          )}
+
+          {order.status === "returned" && (
+            <div className="text-center py-4">
+              <p className="text-purple-400 text-sm font-medium">This order has been returned.</p>
             </div>
           )}
         </div>

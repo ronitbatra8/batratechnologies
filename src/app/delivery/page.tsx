@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch, apiUrl } from "@/lib/api";
-import { Package, Truck, MapPin, Clock, LogOut, ChevronRight, RefreshCw } from "lucide-react";
+import { Package, Truck, MapPin, Clock, LogOut, ChevronRight, RefreshCw, RotateCcw } from "lucide-react";
 
 export default function DeliveryDashboard() {
   const { user, loading, logout } = useAuth();
@@ -60,6 +60,8 @@ export default function DeliveryDashboard() {
   const confirmedOrders = orders.filter(o => o.status === "confirmed");
   const shippedOrders = orders.filter(o => o.status === "shipped");
   const outForDeliveryOrders = orders.filter(o => o.status === "out_for_delivery");
+  const returnPickupOrders = orders.filter(o => o.status === "return_requested");
+  const returnPickupOutOrders = orders.filter(o => o.status === "return_pickup_out");
   const deliveredOrders = orders.filter(o => o.status === "delivered");
 
   return (
@@ -74,11 +76,12 @@ export default function DeliveryDashboard() {
           <button onClick={logout} className="flex items-center gap-2 text-dark-400 hover:text-white text-sm transition-colors"><LogOut size={16} /> Sign Out</button>
         </div>
 
-          <div className="grid grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-6 gap-4 mb-8">
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-gold-400">{stats.total}</p><p className="text-xs text-dark-400 mt-1">Total Assigned</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-blue-400">{confirmedOrders.length}</p><p className="text-xs text-dark-400 mt-1">New Orders</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-purple-400">{shippedOrders.length}</p><p className="text-xs text-dark-400 mt-1">To Pick Up</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-orange-400">{outForDeliveryOrders.length}</p><p className="text-xs text-dark-400 mt-1">Out for Delivery</p></div>
+            <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-yellow-400">{returnPickupOrders.length + returnPickupOutOrders.length}</p><p className="text-xs text-dark-400 mt-1">Return Pickups</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-green-400">{stats.delivered}</p><p className="text-xs text-dark-400 mt-1">Delivered</p></div>
           </div>
 
@@ -110,6 +113,20 @@ export default function DeliveryDashboard() {
                     <div className="flex items-center justify-between">
                       <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>
                       <div className="flex items-center gap-3"><span className="px-3 py-1 rounded-full text-[10px] font-semibold border text-purple-400 bg-purple-500/10 border-purple-500/20">SHIPPED</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3 text-dark-400 text-xs"><MapPin size={12} /> {order.shippingAddress}, {order.shippingCity}</div>
+                  </Link>
+                ))}</div>
+              </div>
+            )}
+            {returnPickupOrders.length + returnPickupOutOrders.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><RotateCcw size={18} className="text-yellow-400" /> Return Pickups ({(returnPickupOrders.length + returnPickupOutOrders.length)})</h2>
+                <div className="space-y-3">{[...returnPickupOrders, ...returnPickupOutOrders].reverse().map(order => (
+                  <Link key={order.id} href={`/delivery/order-detail?id=${order.id}`} className="block bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors group">
+                    <div className="flex items-center justify-between">
+                      <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>
+                      <div className="flex items-center gap-3"><span className={`px-3 py-1 rounded-full text-[10px] font-semibold border ${order.status === "return_pickup_out" ? "text-orange-400 bg-orange-500/10 border-orange-500/20" : "text-yellow-400 bg-yellow-500/10 border-yellow-500/20"}`}>{order.status === "return_pickup_out" ? "PICKUP OUT" : "RETURN REQUESTED"}</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
                     </div>
                     <div className="flex items-center gap-2 mt-3 text-dark-400 text-xs"><MapPin size={12} /> {order.shippingAddress}, {order.shippingCity}</div>
                   </Link>

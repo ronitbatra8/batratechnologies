@@ -67,7 +67,7 @@ function normalizePhone(phone) {
   return cleaned.startsWith("91") && cleaned.length === 12 ? cleaned.slice(2) : cleaned;
 }
 
-const VALID_ORDER_STATUSES = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"];
+const VALID_ORDER_STATUSES = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "return_pickup_out", "returned"];
 const VALID_MESSAGE_STATUSES = ["pending", "in-progress", "replied", "resolved"];
 
 module.exports = { escapeHtml, safeErrorMessage, validateEmail, isEmail, isPhone, normalizePhone, VALID_ORDER_STATUSES, VALID_MESSAGE_STATUSES };
