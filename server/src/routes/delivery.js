@@ -30,6 +30,29 @@ router.get("/orders/:id", auth, requireRole("DELIVERY"), async (req, res) => {
   }
 });
 
+router.post("/orders/:id/mark-out-for-delivery", auth, requireRole("DELIVERY"), async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.assignedTo !== req.userId) return res.status(403).json({ error: "Not assigned to you" });
+    if (order.status !== "shipped") return res.status(400).json({ error: "Order must be picked up first" });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "out_for_delivery" },
+    });
+
+    const user = await prisma.user.findUnique({ where: { id: order.userId } });
+    if (user?.email) {
+      sendOrderStatusUpdate(user.email, user.name, { ...order, status: "out_for_delivery" }, order.status).catch((e) => console.error("Out-for-delivery email failed:", e.message));
+    }
+
+    res.json({ message: "Marked as out for delivery. Customer has been notified." });
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
 router.post("/orders/:id/send-code", auth, requireRole("DELIVERY"), async (req, res) => {
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });

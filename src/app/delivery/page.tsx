@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch, apiUrl } from "@/lib/api";
+import ConfirmModal from "@/components/ConfirmModal";
 import { Package, Truck, MapPin, Clock, LogOut, ChevronRight, RefreshCw, RotateCcw } from "lucide-react";
 
 export default function DeliveryDashboard() {
@@ -14,6 +15,8 @@ export default function DeliveryDashboard() {
   const [stats, setStats] = useState({ total: 0, delivered: 0, shipped: 0 });
   const [fetching, setFetching] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [outForDeliveryId, setOutForDeliveryId] = useState<string | null>(null);
+  const [outForDeliveryLoading, setOutForDeliveryLoading] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -64,6 +67,20 @@ export default function DeliveryDashboard() {
   const returnPickupOutOrders = orders.filter(o => o.status === "return_pickup_out");
   const deliveredOrders = orders.filter(o => o.status === "delivered");
 
+  const handleMarkOutForDelivery = async (orderId: string) => {
+    setOutForDeliveryLoading(true);
+    try {
+      const auth = JSON.parse(sessionStorage.getItem("deliveryAuth") || "{}");
+      const res = await fetch(apiUrl(`/delivery/orders/${orderId}/mark-out-for-delivery`), {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth.token}` },
+      });
+      if (!res.ok) { const e = await res.json(); alert(e.error || "Failed"); return; }
+      fetchOrders();
+    } catch { alert("Failed to mark as out for delivery"); }
+    setOutForDeliveryLoading(false);
+    setOutForDeliveryId(null);
+  };
+
   return (
     <div className="min-h-screen bg-dark-950 page-transition">
       <div className="max-w-5xl mx-auto px-6 pt-28 pb-24">
@@ -109,13 +126,21 @@ export default function DeliveryDashboard() {
               <div>
                 <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2"><Truck size={18} className="text-purple-400" /> To Pick Up ({shippedOrders.length})</h2>
                 <div className="space-y-3">{[...shippedOrders].reverse().map(order => (
-                  <Link key={order.id} href={`/delivery/order-detail?id=${order.id}`} className="block bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors group">
+                  <div key={order.id} className="bg-dark-900/60 border border-dark-800/50 rounded-xl p-5 hover:border-dark-700 transition-colors">
                     <div className="flex items-center justify-between">
                       <div><p className="text-white font-medium">#{order.id.slice(-8).toUpperCase()}</p><p className="text-xs text-dark-400 mt-0.5">{new Date(order.createdAt).toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"})}</p></div>
-                      <div className="flex items-center gap-3"><span className="px-3 py-1 rounded-full text-[10px] font-semibold border text-purple-400 bg-purple-500/10 border-purple-500/20">SHIPPED</span><ChevronRight size={16} className="text-dark-600 group-hover:text-gold-400 transition-colors" /></div>
+                      <span className="px-3 py-1 rounded-full text-[10px] font-semibold border text-purple-400 bg-purple-500/10 border-purple-500/20">SHIPPED</span>
                     </div>
                     <div className="flex items-center gap-2 mt-3 text-dark-400 text-xs"><MapPin size={12} /> {order.shippingAddress}, {order.shippingCity}</div>
-                  </Link>
+                    <div className="flex items-center gap-3 mt-4 pt-3 border-t border-dark-800/50">
+                      <Link href={`/delivery/order-detail?id=${order.id}`} className="text-xs text-gold-400 hover:text-gold-300 flex items-center gap-1"><ChevronRight size={14} /> Details</Link>
+                      <button
+                        onClick={() => setOutForDeliveryId(order.id)}
+                        disabled={outForDeliveryLoading && outForDeliveryId === order.id}
+                        className="ml-auto text-xs font-semibold px-5 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-400 hover:to-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >{outForDeliveryLoading && outForDeliveryId === order.id ? "Please Wait..." : "I'm on my way — Out for Delivery"}</button>
+                    </div>
+                  </div>
                 ))}</div>
               </div>
             )}
@@ -163,6 +188,16 @@ export default function DeliveryDashboard() {
             )}
           </div>
         )}
+
+        <ConfirmModal
+          open={outForDeliveryId !== null}
+          title="Mark as Out for Delivery?"
+          message="This will notify the customer that you are on your way with their order."
+          confirmLabel="Yes, Mark Out for Delivery"
+          onConfirm={() => outForDeliveryId && handleMarkOutForDelivery(outForDeliveryId)}
+          onCancel={() => { setOutForDeliveryId(null); }}
+          variant="default"
+        />
       </div>
     </div>
   );
