@@ -2,13 +2,14 @@
 
 import { Shield, Eye, EyeOff } from "lucide-react";
 
-export default function AuthGate({ adminKey, setAdminKey, showKey, setShowKey, loading, onSubmit }: {
+export default function AuthGate({ adminKey, setAdminKey, showKey, setShowKey, loading, onSubmit, authError }: {
   adminKey: string;
   setAdminKey: (v: string) => void;
   showKey: boolean;
   setShowKey: (v: boolean) => void;
   loading: boolean;
   onSubmit: () => void;
+  authError?: string;
 }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 pt-24 pb-12 page-transition">
@@ -29,6 +30,7 @@ export default function AuthGate({ adminKey, setAdminKey, showKey, setShowKey, l
                 {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {authError && <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{authError}</p>}
             <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-gold-500/20 disabled:opacity-50">
               {loading ? "Connecting..." : "Access Dashboard"}
             </button>

@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  const [authError, setAuthError] = useState("");
 
   const [orders, setOrders] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -36,6 +37,7 @@ export default function AdminPage() {
 
   const loadAll = useCallback(async () => {
     setLoading(true);
+    setAuthError("");
     try {
       const h = adminHeaders(adminKey);
       const [o, u, s, a, nl, mg, pr] = await Promise.all([
@@ -47,7 +49,7 @@ export default function AdminPage() {
         fetch(`${API}/api/messages/list`, { headers: h }).then((r) => r.json()),
         fetch(`${API}/api/admin/password-resets`, { headers: h }).then((r) => r.json()),
       ]);
-      if (o.error) { alert(o.error); return; }
+      if (o.error) { setAuthError(o.error); setLoading(false); return; }
       setOrders(o);
       setUsers(u);
       setStats(s);
@@ -56,7 +58,7 @@ export default function AdminPage() {
       setMessages(mg);
       setPasswordResets(Array.isArray(pr) ? pr : []);
       setAuthenticated(true);
-    } catch { alert("Cannot connect to server"); }
+    } catch { setAuthError("Cannot connect to server"); }
     setLoading(false);
   }, [adminKey]);
 
@@ -105,7 +107,7 @@ export default function AdminPage() {
   } as Partial<Record<Tab, number>>), [orders, users, messages, passwordResets, newsletter]);
 
   if (!authenticated) {
-    return <AuthGate adminKey={adminKey} setAdminKey={setAdminKey} showKey={showKey} setShowKey={setShowKey} loading={loading} onSubmit={loadAll} />;
+    return <AuthGate adminKey={adminKey} setAdminKey={setAdminKey} showKey={showKey} setShowKey={setShowKey} loading={loading} onSubmit={loadAll} authError={authError} />;
   }
 
   return (
