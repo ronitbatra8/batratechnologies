@@ -268,6 +268,7 @@ router.put("/orders/:id/assign", adminAuth, async (req, res) => {
     const { deliveryId } = req.body;
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.status === "delivered" || order.status === "returned") return res.status(400).json({ error: "Cannot assign delivery for a completed order" });
     if (!deliveryId) {
       await prisma.order.update({ where: { id: req.params.id }, data: { assignedTo: null } });
       return res.json({ message: "Order unassigned" });
@@ -275,8 +276,10 @@ router.put("/orders/:id/assign", adminAuth, async (req, res) => {
     const exec = await prisma.user.findUnique({ where: { id: deliveryId } });
     if (!exec || exec.role !== "DELIVERY") return res.status(400).json({ error: "Invalid delivery executive" });
     if (!exec.approved) return res.status(400).json({ error: "Delivery executive is not approved" });
-    await prisma.order.update({ where: { id: req.params.id }, data: { assignedTo: deliveryId } });
-    res.json({ message: "Order assigned" });
+    const updateData = { assignedTo: deliveryId };
+    if (order.status === "confirmed") updateData.status = "shipped";
+    await prisma.order.update({ where: { id: req.params.id }, data: updateData });
+    res.json({ message: "Order assigned and status updated to shipped" });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
   }
