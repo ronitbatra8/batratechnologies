@@ -68,7 +68,7 @@ router.post("/orders/:id/verify-code", auth, requireRole("DELIVERY"), async (req
 
     await prisma.order.update({
       where: { id: order.id },
-      data: { status: "delivered", deliveryCode: null },
+      data: { status: "delivered", deliveryCode: null, deliveredAt: new Date() },
     });
 
     const user = await prisma.user.findUnique({ where: { id: order.userId } });

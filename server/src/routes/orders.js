@@ -96,7 +96,7 @@ router.get("/track/:id", async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id: req.params.id },
       select: {
-        id: true, items: true, totalAmount: true, status: true, createdAt: true,
+        id: true, items: true, totalAmount: true, status: true, createdAt: true, deliveredAt: true,
         shippingName: true, shippingPhone: true, shippingAddress: true,
         shippingCity: true, shippingState: true, shippingPincode: true, paymentMethod: true,
       },
@@ -115,6 +115,41 @@ router.get("/:id", auth, async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
     res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
+router.post("/:id/cancel", auth, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order || order.userId !== req.userId) return res.status(404).json({ error: "Order not found" });
+    if (order.status !== "confirmed") return res.status(400).json({ error: "Order can only be cancelled before shipping" });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "cancelled", cancelledAt: new Date(), cancelReason: req.body.reason || null },
+    });
+    res.json({ message: "Order cancelled successfully" });
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
+router.post("/:id/request-return", auth, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order || order.userId !== req.userId) return res.status(404).json({ error: "Order not found" });
+    if (order.status !== "delivered") return res.status(400).json({ error: "Can only return a delivered order" });
+
+    const hoursSinceDelivery = (Date.now() - new Date(order.deliveredAt || order.updatedAt || order.createdAt).getTime()) / (1000 * 60 * 60);
+    if (hoursSinceDelivery > 12) return res.status(400).json({ error: "Return window is 12 hours from delivery" });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "return_requested", returnRequestedAt: new Date(), returnReason: req.body.reason || null },
+    });
+    res.json({ message: "Return requested. Admin will review it." });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
   }

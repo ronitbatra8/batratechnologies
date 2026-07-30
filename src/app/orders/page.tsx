@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
-import { Package, Clock, Check, Truck, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
+import { Package, Clock, Check, Truck, ChevronDown, ChevronUp, MessageCircle, X, RotateCcw, AlertTriangle } from "lucide-react";
 
 interface OrderItem {
   productId: string;
@@ -37,6 +37,8 @@ const statusSteps = [
   { key: "shipped", label: "Shipped", icon: Truck, description: "Your order is on the way" },
   { key: "out_for_delivery", label: "Out for Delivery", icon: Truck, description: "Your order is out for delivery" },
   { key: "delivered", label: "Delivered", icon: Package, description: "Your order has been delivered" },
+  { key: "return_requested", label: "Return Requested", icon: RotateCcw, description: "Return requested" },
+  { key: "returned", label: "Returned", icon: RotateCcw, description: "Order has been returned" },
 ];
 
 const statusColors: Record<string, string> = {
@@ -46,6 +48,8 @@ const statusColors: Record<string, string> = {
   out_for_delivery: "text-orange-400 bg-orange-500/10 border-orange-500/20",
   delivered: "text-green-400 bg-green-500/10 border-green-500/20",
   cancelled: "text-red-400 bg-red-500/10 border-red-500/20",
+  return_requested: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  returned: "text-purple-400 bg-purple-500/10 border-purple-500/20",
 };
 
 const statusIcons: Record<string, any> = {
@@ -54,6 +58,8 @@ const statusIcons: Record<string, any> = {
   shipped: Truck,
   out_for_delivery: Truck,
   delivered: Package,
+  return_requested: RotateCcw,
+  returned: RotateCcw,
 };
 
 function OrderTrackingTimeline({ status }: { status: string }) {
@@ -109,6 +115,35 @@ export default function OrdersPage() {
         .finally(() => setLoading(false));
     }
   }, [user, authLoading, router]);
+
+  const [actionMsg, setActionMsg] = useState<{ id: string; text: string; error?: boolean } | null>(null);
+
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      await apiFetch(`/orders/${orderId}/cancel`, { method: "POST", body: JSON.stringify({ reason: "Cancelled by customer" }), headers: { "Content-Type": "application/json" } });
+      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "cancelled" } : o));
+      setActionMsg({ id: orderId, text: "Order cancelled successfully" });
+      setTimeout(() => setActionMsg(null), 3000);
+    } catch (e: any) { setActionMsg({ id: orderId, text: e.message || "Failed to cancel", error: true }); setTimeout(() => setActionMsg(null), 3000); }
+  };
+
+  const handleReturnRequest = async (orderId: string) => {
+    const reason = prompt("Please enter the reason for return:");
+    if (!reason || !reason.trim()) return;
+    try {
+      await apiFetch(`/orders/${orderId}/request-return`, { method: "POST", body: JSON.stringify({ reason: reason.trim() }), headers: { "Content-Type": "application/json" } });
+      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "return_requested" } : o));
+      setActionMsg({ id: orderId, text: "Return requested. Admin will review." });
+      setTimeout(() => setActionMsg(null), 3000);
+    } catch (e: any) { setActionMsg({ id: orderId, text: e.message || "Failed to request return", error: true }); setTimeout(() => setActionMsg(null), 3000); }
+  };
+
+  const canReturn = (order: Order) => {
+    if (order.status !== "delivered") return false;
+    const hoursSince = (Date.now() - new Date((order as any).deliveredAt || order.createdAt).getTime()) / (1000 * 60 * 60);
+    return hoursSince <= 12;
+  };
 
   const shareWhatsApp = (order: Order) => {
     const items = order.items.map((item: OrderItem) => `${item.name} x${item.quantity}`).join(", ");
@@ -199,10 +234,27 @@ export default function OrdersPage() {
                         <p>{order.shippingAddress}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}</p>
                         <p className="mt-1 text-gold-400">Payment: {order.paymentMethod}</p>
                       </div>
-                      <button onClick={() => shareWhatsApp(order)} className="flex items-center gap-2 bg-green-600/10 border border-green-600/20 text-green-400 hover:bg-green-600/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
-                        <MessageCircle size={16} /> Share on WhatsApp
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {order.status === "confirmed" && (
+                          <button onClick={() => handleCancelOrder(order.id)} className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
+                            <X size={16} /> Cancel Order
+                          </button>
+                        )}
+                        {canReturn(order) && (
+                          <button onClick={() => handleReturnRequest(order.id)} className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
+                            <RotateCcw size={16} /> Request Return
+                          </button>
+                        )}
+                        <button onClick={() => shareWhatsApp(order)} className="flex items-center gap-2 bg-green-600/10 border border-green-600/20 text-green-400 hover:bg-green-600/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
+                          <MessageCircle size={16} /> Share
+                        </button>
+                      </div>
                     </div>
+                    {actionMsg && actionMsg.id === order.id && (
+                      <div className={`mt-3 text-xs px-4 py-2.5 rounded-xl ${actionMsg.error ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-green-500/10 border border-green-500/20 text-green-400"}`}>
+                        {actionMsg.text}
+                      </div>
+                    )}
                   </div>
                 )}
 

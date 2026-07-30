@@ -99,15 +99,17 @@ router.get("/stats", adminAuth, async (req, res) => {
     const totalOrders = await prisma.order.count();
     const totalUsers = await prisma.user.count();
     const totalProducts = await prisma.product.count();
-    const revenue = await prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: "cancelled" } } });
+    const revenue = await prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: "delivered" } });
     const pendingOrders = await prisma.order.count({ where: { status: "pending" } });
     const confirmedOrders = await prisma.order.count({ where: { status: "confirmed" } });
     const outForDeliveryOrders = await prisma.order.count({ where: { status: "out_for_delivery" } });
     const deliveredOrders = await prisma.order.count({ where: { status: "delivered" } });
+    const returnedOrders = await prisma.order.count({ where: { status: "returned" } });
+    const returnRequests = await prisma.order.count({ where: { status: "return_requested" } });
     res.json({
       totalOrders, totalUsers, totalProducts,
       totalRevenue: revenue._sum.totalAmount || 0,
-      pendingOrders, confirmedOrders, outForDeliveryOrders, deliveredOrders,
+      pendingOrders, confirmedOrders, outForDeliveryOrders, deliveredOrders, returnedOrders, returnRequests,
     });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
@@ -275,6 +277,71 @@ router.put("/orders/:id/assign", adminAuth, async (req, res) => {
     if (!exec.approved) return res.status(400).json({ error: "Delivery executive is not approved" });
     await prisma.order.update({ where: { id: req.params.id }, data: { assignedTo: deliveryId } });
     res.json({ message: "Order assigned" });
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
+router.get("/return-requests", adminAuth, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { status: "return_requested" },
+      orderBy: { returnRequestedAt: "desc" },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } },
+      },
+    });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
+router.put("/return-requests/:id/approve", adminAuth, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.status !== "return_requested") return res.status(400).json({ error: "Order is not awaiting return approval" });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "returned", returnedAt: new Date() },
+    });
+
+    try {
+      const user = await prisma.user.findUnique({ where: { id: order.userId }, select: { email: true, name: true } });
+      if (user?.email) {
+        const { sendOrderStatusUpdate } = require("../utils/email");
+        sendOrderStatusUpdate(user.email, user.name, { ...order, status: "returned" }, "return_requested").catch(() => {});
+      }
+    } catch {}
+
+    res.json({ message: "Return approved. Order revenue removed from stats." });
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
+router.put("/return-requests/:id/reject", adminAuth, async (req, res) => {
+  try {
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.status !== "return_requested") return res.status(400).json({ error: "Order is not awaiting return approval" });
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "delivered", returnRequestedAt: null, returnReason: null },
+    });
+
+    try {
+      const user = await prisma.user.findUnique({ where: { id: order.userId }, select: { email: true, name: true } });
+      if (user?.email) {
+        const { sendOrderStatusUpdate } = require("../utils/email");
+        sendOrderStatusUpdate(user.email, user.name, { ...order, status: "delivered" }, "return_requested").catch(() => {});
+      }
+    } catch {}
+
+    res.json({ message: "Return request rejected. Order marked as delivered." });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
   }

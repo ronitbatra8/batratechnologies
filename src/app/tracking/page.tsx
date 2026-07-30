@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
-import { Search, Package, Clock, Check, Truck, X, MapPin, Phone, CreditCard } from "lucide-react";
+import { Search, Package, Clock, Check, Truck, X, MapPin, Phone, CreditCard, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 const statusSteps = [
@@ -11,11 +11,14 @@ const statusSteps = [
   { key: "shipped", label: "Shipped", icon: Truck },
   { key: "out_for_delivery", label: "Out for Delivery", icon: Truck },
   { key: "delivered", label: "Delivered", icon: Package },
+  { key: "return_requested", label: "Return Requested", icon: RotateCcw },
+  { key: "returned", label: "Returned", icon: RotateCcw },
 ];
 
 const statusColorMap: Record<string, string> = {
   pending: "text-yellow-400", confirmed: "text-blue-400", shipped: "text-purple-400",
   out_for_delivery: "text-orange-400", delivered: "text-green-400", cancelled: "text-red-400",
+  return_requested: "text-yellow-400", returned: "text-purple-400",
 };
 
 const statusBadgeMap: Record<string, string> = {
@@ -25,6 +28,8 @@ const statusBadgeMap: Record<string, string> = {
   out_for_delivery: "text-orange-400 bg-orange-500/10 border-orange-500/20",
   delivered: "text-green-400 bg-green-500/10 border-green-500/20",
   cancelled: "text-red-400 bg-red-500/10 border-red-500/20",
+  return_requested: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  returned: "text-purple-400 bg-purple-500/10 border-purple-500/20",
 };
 
 export default function TrackingPage() {
@@ -47,6 +52,7 @@ export default function TrackingPage() {
 
   const currentStatus = order?.status || "";
   const isCancelled = currentStatus === "cancelled";
+  const isReturned = currentStatus === "returned" || currentStatus === "return_requested";
   const currentIdx = statusSteps.findIndex((s) => s.key === currentStatus);
   const iconColor = statusColorMap[currentStatus] || "text-dark-400";
 
@@ -87,6 +93,11 @@ export default function TrackingPage() {
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
               <X size={24} className="text-red-400 mx-auto mb-2" />
               <p className="text-red-400 font-semibold">This order has been cancelled</p>
+            </div>
+          ) : isReturned ? (
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-6 text-center">
+              <RotateCcw size={24} className="text-purple-400 mx-auto mb-2" />
+              <p className="text-purple-400 font-semibold">{currentStatus === "return_requested" ? "Return requested — awaiting admin approval" : "This order has been returned"}</p>
             </div>
           ) : (
             <div className="flex items-center gap-1 w-full">

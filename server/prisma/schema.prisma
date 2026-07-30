@@ -82,6 +82,12 @@ model Order {
   paymentMethod   String   @default("COD")
   status          String   @default("pending")
   createdAt       DateTime @default(now())
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  returnRequestedAt DateTime?
+  returnReason    String?
+  returnedAt      DateTime?
 }
 
 model Cart {
