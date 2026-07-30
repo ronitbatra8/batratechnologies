@@ -12,6 +12,8 @@ export const statusColors: Record<string, string> = {
   out_for_delivery: "text-orange-400 bg-orange-500/10 border-orange-500/20",
   delivered: "text-green-400 bg-green-500/10 border-green-500/20",
   cancelled: "text-red-400 bg-red-500/10 border-red-500/20",
+  return_requested: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  returned: "text-purple-400 bg-purple-500/10 border-purple-500/20",
 };
 
 export const msgStatusColors: Record<string, string> = {

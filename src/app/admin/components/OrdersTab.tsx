@@ -23,6 +23,8 @@ const statusGradients: Record<string, string> = {
   out_for_delivery: "from-orange-500/15 to-orange-500/5",
   delivered: "from-green-500/15 to-green-500/5",
   cancelled: "from-red-500/15 to-red-500/5",
+  return_requested: "from-yellow-500/15 to-yellow-500/5",
+  returned: "from-purple-500/15 to-purple-500/5",
 };
 
 const statusBorders: Record<string, string> = {
@@ -32,6 +34,8 @@ const statusBorders: Record<string, string> = {
   out_for_delivery: "border-l-orange-400",
   delivered: "border-l-green-400",
   cancelled: "border-l-red-400",
+  return_requested: "border-l-yellow-400",
+  returned: "border-l-purple-400",
 };
 
 export default function OrdersTab({
@@ -97,7 +101,7 @@ export default function OrdersTab({
     return matchesSearch && matchesFilter;
   });
 
-  const statuses = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"];
+  const statuses = ["pending", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled", "return_requested", "returned"];
 
   const statusCounts = statuses.reduce((acc, status) => {
     acc[status] = orders.filter((o) => o.status === status).length;
