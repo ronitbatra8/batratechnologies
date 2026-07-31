@@ -1,10 +1,34 @@
 const express = require("express");
+const path = require("path");
+const crypto = require("crypto");
+const multer = require("multer");
 const prisma = require("../prisma");
 const auth = require("../middleware/auth");
 const { requireRole } = require("../middleware/role");
 const { safeErrorMessage } = require("../utils/helpers");
 
 const router = express.Router();
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, "../../uploads"),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase().replace(/[^a-z0-9.]/g, "") || ".jpg";
+    cb(null, `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: MAX_IMAGE_BYTES, files: 1 },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      return cb(new Error("Only JPG, PNG, WEBP, GIF, and AVIF images are allowed"));
+    }
+    cb(null, true);
+  },
+});
 
 function validateProduct(body, isUpdate) {
   const { name, brand, category, price, originalPrice, description, features, specifications, images, inStock, badge } = body;
@@ -42,6 +66,18 @@ function validateProduct(body, isUpdate) {
   if (inStock !== undefined && typeof inStock !== "boolean") errors.push("inStock must be a boolean");
   return errors;
 }
+
+router.post("/upload", auth, requireRole("SELLER"), (req, res) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Image must be 5MB or smaller" });
+      return res.status(400).json({ error: err.message || "Upload failed" });
+    }
+    if (!req.file) return res.status(400).json({ error: "No image file received" });
+    const base = `${req.protocol}://${req.get("host")}`;
+    res.json({ url: `${base}/api/uploads/${req.file.filename}` });
+  });
+});
 
 router.get("/products", auth, requireRole("SELLER"), async (req, res) => {
   try {
