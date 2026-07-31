@@ -14,6 +14,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hideNav, setHideNav] = useState(false);
+  const lastScrollY = useRef(0);
   const [mounted, setMounted] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -21,8 +23,17 @@ export default function Navbar() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 20);
+      if (y > lastScrollY.current && y > 120) {
+        setHideNav(true);
+      } else {
+        setHideNav(false);
+      }
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -39,6 +50,7 @@ export default function Navbar() {
   const hasMultiple = accounts.length > 1;
 
   return (
+    <>
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "bg-dark-950/90 backdrop-luxury border-b border-dark-800/50 py-3" : "bg-transparent py-5"}`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
@@ -221,25 +233,26 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-dark-950/95 backdrop-luxury border-t border-dark-800/50 pb-[env(safe-area-inset-bottom)]">
-        <div className="grid grid-cols-4">
-          {[
-            { label: "Home", href: "/", icon: Home, active: pathname === "/" },
-            { label: "Products", href: "/products", icon: ShoppingBag, active: pathname === "/products" || pathname.startsWith("/products/") },
-            { label: "About", href: "/about", icon: Info, active: pathname.startsWith("/about") },
-            { label: "Contact", href: "/contact", icon: Mail, active: pathname.startsWith("/contact") },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className={`flex flex-col items-center gap-1 py-2.5 text-[10px] uppercase tracking-widest font-medium transition-colors ${item.active ? "text-gold-400" : "text-dark-400 hover:text-gold-400"}`}>
-                <Icon size={18} className={item.active ? "text-gold-400" : ""} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </header>
+
+    <nav className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-dark-950/95 backdrop-luxury border-t border-dark-800/50 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${hideNav ? "translate-y-full" : "translate-y-0"}`}>
+      <div className="grid grid-cols-4">
+        {[
+          { label: "Home", href: "/", icon: Home, active: pathname === "/" },
+          { label: "Products", href: "/products", icon: ShoppingBag, active: pathname === "/products" || pathname.startsWith("/products/") },
+          { label: "About", href: "/about", icon: Info, active: pathname.startsWith("/about") },
+          { label: "Contact", href: "/contact", icon: Mail, active: pathname.startsWith("/contact") },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className={`flex flex-col items-center gap-1 py-2.5 text-[10px] uppercase tracking-widest font-medium transition-colors ${item.active ? "text-gold-400" : "text-dark-400 hover:text-gold-400"}`}>
+              <Icon size={18} className={item.active ? "text-gold-400" : ""} />
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+    </>
   );
 }
