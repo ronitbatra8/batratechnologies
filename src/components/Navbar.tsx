@@ -50,7 +50,7 @@ export default function Navbar() {
 
   return (
     <>
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "top-3 left-4 right-4 rounded-full py-4 bg-dark-950/55 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-lg shadow-black/40 lg:top-0 lg:left-0 lg:right-0 lg:rounded-none lg:py-3 lg:bg-dark-950/90 lg:border-b lg:border-x-0 lg:border-t-0 lg:shadow-none" : "py-5 bg-transparent lg:py-5"} ${hideNav ? "-translate-y-full" : "translate-y-0"}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "top-3 left-4 right-4 rounded-full py-4 bg-dark-950/55 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-lg shadow-black/40 lg:top-0 lg:left-0 lg:right-0 lg:rounded-none lg:py-3 lg:bg-dark-950/90 lg:border-b lg:border-x-0 lg:border-t-0 lg:shadow-none" : "py-5 bg-transparent lg:py-5"} ${hideNav ? "-translate-y-[calc(100%+1rem)]" : "translate-y-0"}`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gold-400 to-gold-700 flex items-center justify-center text-dark-950 font-bold text-sm group-hover:shadow-lg group-hover:shadow-gold-500/20 transition-shadow">
