@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { apiFetch, apiUrl } from "@/lib/api";
+import { apiFetch } from "@/lib/api";
 import ConfirmModal from "@/components/ConfirmModal";
 import { Package, Truck, MapPin, Clock, LogOut, ChevronRight, RefreshCw, RotateCcw } from "lucide-react";
 
@@ -70,11 +70,7 @@ export default function DeliveryDashboard() {
   const handleMarkOutForDelivery = async (orderId: string) => {
     setOutForDeliveryLoading(true);
     try {
-      const auth = JSON.parse(sessionStorage.getItem("deliveryAuth") || "{}");
-      const res = await fetch(apiUrl(`/delivery/orders/${orderId}/mark-out-for-delivery`), {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth.token}` },
-      });
-      if (!res.ok) { const e = await res.json(); alert(e.error || "Failed"); return; }
+      await apiFetch(`/delivery/orders/${orderId}/mark-out-for-delivery`, { method: "POST" });
       fetchOrders();
     } catch { alert("Failed to mark as out for delivery"); }
     setOutForDeliveryLoading(false);
