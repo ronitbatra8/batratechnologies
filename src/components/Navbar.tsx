@@ -91,7 +91,7 @@ export default function Navbar() {
                   <span className="text-gold-400 font-semibold text-xs">{user.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="hidden sm:inline font-medium">{user.name.split(" ")[0]}</span>
-                <ChevronDown size={14} className={`hidden sm:block transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-dark-900 border border-dark-800 rounded-xl shadow-xl py-2 animate-fade-in-down">
