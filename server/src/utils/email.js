@@ -56,7 +56,10 @@ async function sendOrderConfirmation(to, name, order) {
       </tr>`;
   }).join("");
 
-  const total = Number(order.totalAmount) || 0;
+  const subtotal = items.reduce((sum, i) => sum + (Number(i.price) || 0) * (Number(i.quantity) || 1), 0);
+  const shipping = subtotal >= 4999 ? 0 : 99;
+  const tax = Math.round(subtotal * 0.18);
+  const total = subtotal + shipping + tax;
 
   await transporter.sendMail({
     from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
@@ -83,15 +86,15 @@ async function sendOrderConfirmation(to, name, order) {
         <div style="border-top:1px solid #333;padding-top:16px;margin-bottom:24px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
             <span style="color:#999;font-size:13px;">Subtotal</span>
-            <span style="color:#fff;font-size:13px;">₹${total.toLocaleString("en-IN")}</span>
+            <span style="color:#fff;font-size:13px;">₹${subtotal.toLocaleString("en-IN")}</span>
           </div>
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
             <span style="color:#999;font-size:13px;">Shipping</span>
-            <span style="color:#fff;font-size:13px;">${total >= 4999 ? "Free" : "₹99"}</span>
+            <span style="color:#fff;font-size:13px;">${shipping === 0 ? "Free" : "₹" + shipping.toLocaleString("en-IN")}</span>
           </div>
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
             <span style="color:#999;font-size:13px;">GST (18%)</span>
-            <span style="color:#fff;font-size:13px;">₹${Math.round(total * 0.18).toLocaleString("en-IN")}</span>
+            <span style="color:#fff;font-size:13px;">₹${tax.toLocaleString("en-IN")}</span>
           </div>
           <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #333;">
             <span style="color:#d4a853;font-size:15px;font-weight:bold;">Total</span>

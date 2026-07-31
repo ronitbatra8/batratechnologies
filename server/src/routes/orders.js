@@ -33,7 +33,8 @@ router.post("/", auth, async (req, res) => {
     }
 
     const shipping = verifiedTotal >= 4999 ? 0 : 99;
-    const totalAmount = Math.round((verifiedTotal + shipping) * 100) / 100;
+    const tax = Math.round(verifiedTotal * 0.18);
+    const totalAmount = verifiedTotal + shipping + tax;
 
     const order = await prisma.order.create({
       data: {
@@ -55,10 +56,10 @@ router.post("/", auth, async (req, res) => {
     try {
       const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { email: true, name: true } });
       if (user && user.email) {
-        await sendOrderConfirmation(user.email, user.name, order);
+        sendOrderConfirmation(user.email, user.name, order).catch((emailErr) => console.error("Order confirmation email failed:", emailErr.message));
       }
-    } catch (emailErr) {
-      console.error("Order confirmation email failed:", emailErr.message);
+    } catch (err) {
+      console.error("Order confirmation lookup failed:", err.message);
     }
 
     res.json(order);

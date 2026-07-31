@@ -23,7 +23,7 @@ export default function CartPage() {
     );
   }
 
-  const shipping = totalPrice > 4999 ? 0 : 99;
+  const shipping = totalPrice >= 4999 ? 0 : 99;
   const tax = totalPrice * 0.18;
   const total = totalPrice + shipping + tax;
 

@@ -65,7 +65,7 @@ export default function CheckoutPage() {
     } catch {}
   };
 
-  const shippingCost = totalPrice > 4999 ? 0 : 99;
+  const shippingCost = totalPrice >= 4999 ? 0 : 99;
   const tax = totalPrice * 0.18;
   const total = totalPrice + shippingCost + tax;
 
@@ -172,6 +172,35 @@ export default function CheckoutPage() {
             <h1 className="text-4xl font-display font-bold text-white mb-3">Order Placed</h1>
             <p className="text-dark-400 mb-2">Complete your online payment within 24 hours to confirm this order.</p>
             <p className="text-xs text-dark-600 mb-10">Order #{orderData?.id?.slice(-8) || "BT" + Date.now().toString().slice(-8)}</p>
+
+            <div className="bg-dark-900/60 border border-gold-500/20 rounded-2xl p-6 mb-10 text-left">
+              <h2 className="font-display text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <Lock size={14} className="text-gold-400" /> How to Pay (UPI)
+              </h2>
+              <ol className="space-y-3 text-sm text-dark-300">
+                <li className="flex gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                  <span>Send the total amount via UPI to <span className="text-white font-medium">9351396757</span> (Batra Technologies). If you need the exact UPI handle, message us on WhatsApp.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                  <span>Message us your payment confirmation on WhatsApp with your Order # so we can verify it.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="w-6 h-6 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                  <span>Your order is confirmed once the payment is approved. If payment isn't received within 24 hours, the order is cancelled automatically.</span>
+                </li>
+              </ol>
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                <a href="https://wa.me/919351396757?text=Hi%20Batra%20Technologies%2C%20I%20made%20a%20UPI%20payment%20for%20my%20order%20and%20would%20like%20to%20confirm%20it." target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-dark-950 px-6 py-3 rounded-xl font-semibold text-center transition-all hover:shadow-lg hover:shadow-green-500/20">
+                  Confirm Payment on WhatsApp
+                </a>
+                <a href={`tel:${"9351396757"}`} className="border border-dark-700 text-dark-300 px-6 py-3 rounded-xl font-medium text-center hover:border-dark-600 hover:text-white transition-all">
+                  Call { "9351396757" }
+                </a>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link href="/orders" className="bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 px-8 py-4 rounded-xl font-semibold inline-flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-gold-500/20">
                 View Orders
