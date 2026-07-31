@@ -50,7 +50,7 @@ export default function Navbar() {
 
   return (
     <>
-    <header className={`fixed left-4 right-4 top-3 z-50 rounded-2xl transition-all duration-500 lg:left-0 lg:right-0 lg:top-0 lg:rounded-none ${scrolled ? "py-3 bg-dark-950/85 backdrop-blur-xl border border-dark-800/50 shadow-lg shadow-black/40 lg:py-3 lg:bg-dark-950/90 lg:border-b lg:border-x-0 lg:border-t-0 lg:shadow-none" : "py-4 bg-dark-950/85 backdrop-blur-xl border border-dark-800/50 shadow-lg shadow-black/40 lg:py-5 lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:shadow-none"}`}>
+    <header className={`fixed left-4 right-4 top-3 z-50 rounded-2xl transition-all duration-500 lg:left-0 lg:right-0 lg:top-0 lg:rounded-none ${scrolled ? "py-3 bg-dark-950/55 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-lg shadow-black/40 lg:py-3 lg:bg-dark-950/90 lg:border-b lg:border-x-0 lg:border-t-0 lg:shadow-none" : "py-4 bg-dark-950/55 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-lg shadow-black/40 lg:py-5 lg:bg-transparent lg:backdrop-blur-none lg:backdrop-saturate-100 lg:border-0 lg:shadow-none"}`}>
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gold-400 to-gold-700 flex items-center justify-center text-dark-950 font-bold text-sm group-hover:shadow-lg group-hover:shadow-gold-500/20 transition-shadow">
@@ -175,7 +175,7 @@ export default function Navbar() {
       </div>
     </header>
 
-    <nav className={`fixed bottom-4 left-4 right-4 z-50 lg:hidden bg-dark-950/90 backdrop-blur-xl rounded-2xl border border-dark-800/50 shadow-lg shadow-black/40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${hideNav ? "translate-y-[calc(100%+1rem)]" : "translate-y-0"}`}>
+    <nav className={`fixed bottom-4 left-4 right-4 z-50 lg:hidden bg-dark-950/55 backdrop-blur-2xl backdrop-saturate-150 rounded-2xl border border-white/10 shadow-lg shadow-black/40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${hideNav ? "translate-y-[calc(100%+1rem)]" : "translate-y-0"}`}>
       <div className="grid grid-cols-4">
         {[
           { label: "Home", href: "/", icon: Home, active: pathname === "/" },
