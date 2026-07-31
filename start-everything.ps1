@@ -1,11 +1,12 @@
 param([switch]$NoGit)
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 $Root = "E:\ronit\bca\e commerce"
 $ServerEnv = "$Root\server\.env"
 $LogFile = "$Root\startup.log"
-$Node = "C:\Users\batra\AppData\Local\Temp\node\node-v22.14.0-win-x64\node.exe"
-$NodeFresh = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\node.exe"
+$Node = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\node.exe"
+$Npm = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\npm.cmd"
+$Pm2 = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\node_modules\pm2\bin\pm2"
 $Cloudflared = "C:\Users\batra\AppData\Local\Temp\cloudflared.exe"
 $Vercel = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\vercel.cmd"
 $Git = "C:\Program Files\Git\bin\git.exe"
@@ -25,15 +26,25 @@ function Get-TunnelUrl {
     return $null
 }
 
-Log "========== STARTING EVERYTHING =========="
+function Set-VercelApiUrl($ApiUrl) {
+    try {
+        $ErrorActionPreference = "Continue"
+        $null = & $Vercel env rm NEXT_PUBLIC_API_URL production --yes 2>&1
+        $null = $ApiUrl | & $Vercel env add NEXT_PUBLIC_API_URL production --yes 2>&1
+        Log "Vercel env set to $ApiUrl"
+    } catch { Log "WARN: Vercel env update failed: $($_.Exception.Message)" }
+}
 
-# 1. Kill old processes
+Log "========== STARTING EVERYTHING (pm2 + cloudflare) =========="
+
+# 1. Kill old processes (including any stray watchers)
 Log "Killing old processes..."
-Get-Process -Name "node" -ErrorAction SilentlyContinue | Stop-Process -Force
-Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue | Stop-Process -Force
+Get-Process -Name "cloudflared","ngrok" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+$oldPm2 = Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -match "index\.js" }
+foreach ($p in $oldPm2) { taskkill /F /PID $p.ProcessId 2>$null | Out-Null }
 Start-Sleep -Seconds 2
 
-# 2. Git push
+# 2. Git push (auto-deploys frontend to Vercel)
 if (-not $NoGit) {
     Log "Pushing to Git..."
     try {
@@ -46,20 +57,18 @@ if (-not $NoGit) {
     } catch { Log "WARN: Git push failed: $_" }
 }
 
-# 3. Start backend
-Log "Starting backend server..."
-$np = Start-Process -PassThru -FilePath $Node -ArgumentList "src/index.js" -WorkingDirectory "$Root\server"
+# 3. Start backend with pm2 (auto-restart, never dies)
+Log "Starting backend with pm2..."
+& $Npm install pm2 -g 2>&1 | Out-Null
+$null = & $Node $Pm2 delete batra-backend 2>&1
+$null = & $Node $Pm2 start "$Root\ecosystem.config.js" 2>&1
+$null = & $Node $Pm2 save 2>&1
 Start-Sleep -Seconds 3
-if (-not $np.HasExited) { Log "Backend running (PID: $($np.Id))" }
-else { Log "ERROR: Backend failed to start"; exit 1 }
+Log "Backend started with pm2 (auto-restart enabled)"
 
-# 4. Start Cloudflare tunnel
+# 4. Start Cloudflare quick tunnel
 Log "Starting Cloudflare tunnel..."
-$cfp = Start-Process -PassThru -FilePath $Cloudflared -ArgumentList "tunnel", "--url", "http://localhost:5000" -WorkingDirectory $Root -WindowStyle Hidden
-Start-Sleep -Seconds 8
-$cf = Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue
-if ($cf) { Log "cloudflared running (PID: $($cf[0].Id))" }
-else { Log "ERROR: cloudflared failed to start"; exit 1 }
+Start-Process -FilePath $Cloudflared -ArgumentList "tunnel", "--url", "http://localhost:5000" -WorkingDirectory $Root -WindowStyle Hidden | Out-Null
 
 # 5. Wait for tunnel URL
 Log "Waiting for tunnel URL..."
@@ -71,47 +80,50 @@ for ($i = 0; $i -lt 30; $i++) {
 }
 if (-not $url) { Log "ERROR: No tunnel URL after 60s"; exit 1 }
 Log "Tunnel URL: $url"
+$api = "$url/api"
 
-# 6. Update server .env
+# 6. Update server .env with new URL
 Log "Updating server .env..."
 $content = Get-Content $ServerEnv | Where-Object { $_ -notmatch '^TUNNEL_URL=' }
 $content += "TUNNEL_URL=$url"
 $content | Set-Content $ServerEnv
 Log "Server .env updated"
 
-# 7. Restart backend to pick up new env
-Log "Restarting backend with new TUNNEL_URL..."
-Get-Process -Name "node" -ErrorAction SilentlyContinue | Stop-Process -Force
-Start-Sleep -Seconds 2
-$np = Start-Process -PassThru -FilePath $Node -ArgumentList "src/index.js" -WorkingDirectory "$Root\server"
+# 7. Restart backend so it picks up the URL
+Log "Restarting backend..."
+$null = & $Node $Pm2 restart batra-backend 2>&1
 Start-Sleep -Seconds 3
-Log "Backend restarted (PID: $($np.Id))"
+Log "Backend restarted"
 
-# 8. Update Vercel env
-Log "Updating Vercel env..."
-$api = "$url/api"
+# 8. Update Vercel env + redeploy frontend
+Log "Updating Vercel env + redeploying..."
+Set-VercelApiUrl $api
+Start-Sleep -Seconds 2
 try {
-    $null = & $Vercel env rm NEXT_PUBLIC_API_URL production --yes 2>&1
-} catch { Log "WARN: env rm failed (may not exist yet): $_" }
-try {
-    $null = $api | & $Vercel env add NEXT_PUBLIC_API_URL production --yes 2>&1
-} catch { Log "WARN: env add failed: $_" }
-Log "Vercel env updated: $api"
-
-# 9. Redeploy to Vercel
-Log "Redeploying to Vercel..."
-try {
-    $result = & $Vercel deploy --prod 2>&1
+    $null = & $Vercel deploy --prod 2>&1
     Log "Vercel redeploy triggered"
-} catch { Log "WARN: redeploy failed: $_" }
+} catch { Log "WARN: redeploy failed: $($_.Exception.Message)" }
 
-# 10. Start auto-tunnel watcher in background
+# 9. Verify API responds through tunnel
+$ok = $false
+for ($i = 0; $i -lt 15; $i++) {
+    Start-Sleep -Seconds 2
+    try {
+        $r = Invoke-WebRequest "$api/health" -UseBasicParsing -TimeoutSec 5
+        if ($r.StatusCode -eq 200) { $ok = $true; break }
+    } catch {}
+}
+if ($ok) { Log "API responding: $api" }
+else { Log "WARN: API not responding yet" }
+
+# 10. Start auto-tunnel watcher (single instance) to keep tunnel alive + auto-fix frontend
 Log "Starting auto-tunnel watcher..."
-Start-Process -WorkingDirectory $Root -FilePath "powershell.exe" -ArgumentList "-NoExit", "-File", "auto-tunnel.ps1" -WindowStyle Hidden
-Log "Auto-tunnel watcher started"
+try {
+    Start-Process -WorkingDirectory $Root -FilePath "powershell.exe" -ArgumentList "-NoProfile", "-File", "$Root\auto-tunnel.ps1" -WindowStyle Hidden | Out-Null
+    Log "Auto-tunnel watcher started"
+} catch { Log "WARN: watcher start failed: $($_.Exception.Message)" }
 
 Log "========== ALL DONE =========="
-Log "URL: $url"
 Write-Host ""
 Write-Host "Site: https://batratechnologies.vercel.app"
 Write-Host "Tunnel: $url"

@@ -102,7 +102,7 @@ export default function WishlistPage() {
             {items.map((item) => {
               const p = item.product;
               return (
-                <div key={item.id} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-4 flex items-center gap-5 hover:border-gold-500/20 transition-colors">
+                <div key={item.id} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-4 flex items-center gap-5 hover:border-gold-500/20 transition-colors flex-wrap">
                   <Link href={`/products/${p.id}`} className="shrink-0">
                     <img src={p.images[0]} alt={p.name} className="w-20 h-20 rounded-xl object-cover" />
                   </Link>

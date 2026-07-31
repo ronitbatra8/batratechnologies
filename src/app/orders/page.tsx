@@ -63,6 +63,35 @@ const statusIcons: Record<string, any> = {
   returned: RotateCcw,
 };
 
+function MobileTimeline({ steps, doneMap, currentKey, goldKeys }: { steps: typeof statusSteps; doneMap: Record<string, boolean>; currentKey?: string; goldKeys?: string[] }) {
+  return (
+    <div className="sm:hidden w-full">
+      {steps.map((step, i) => {
+        const done = doneMap[step.key];
+        const isCurrent = step.key === currentKey;
+        const isGold = !goldKeys || goldKeys.includes(step.key);
+        const circle = done ? (isGold ? "bg-gold-500 text-dark-950" : "bg-purple-500 text-white") : "bg-dark-800 text-dark-600 border border-dark-700";
+        const line = done ? (isGold ? "bg-gold-500" : "bg-purple-500") : "bg-dark-700";
+        const label = done ? (isGold ? "text-gold-400" : "text-purple-400") : "text-dark-600";
+        return (
+          <div key={step.key} className="flex gap-3">
+            <div className="flex flex-col items-center shrink-0">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${circle} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
+                <step.icon size={14} />
+              </div>
+              {i < steps.length - 1 && <div className={`w-0.5 flex-1 my-0.5 min-h-4 ${line}`} />}
+            </div>
+            <div className="pt-1.5 pb-4 min-w-0">
+              <p className={`text-sm font-medium ${label}`}>{step.label}</p>
+              <p className="text-xs text-dark-500 mt-0.5">{step.description}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function OrderTrackingTimeline({ status }: { status: string }) {
   const isCancelled = status === "cancelled";
   const isReturnFlow = status === "return_requested" || status === "returned";
@@ -78,9 +107,16 @@ function OrderTrackingTimeline({ status }: { status: string }) {
   }
 
   if (isReturnFlow) {
+    const deliverySteps = steps.slice(0, 5);
+    const returnSteps = steps.slice(5);
+    const doneMap: Record<string, boolean> = {};
+    deliverySteps.forEach(s => { doneMap[s.key] = true; });
+    if (status === "returned" || status === "return_requested") doneMap["return_requested"] = true;
+    if (status === "returned") doneMap["returned"] = true;
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-1 w-full">
+        <MobileTimeline steps={steps} doneMap={doneMap} currentKey={status === "returned" ? "returned" : "return_requested"} goldKeys={["pending", "confirmed", "shipped", "out_for_delivery", "delivered"]} />
+        <div className="hidden sm:flex items-center gap-1 w-full">
           {steps.slice(0, 5).map((step, i) => {
             const done = true;
             return (
@@ -95,7 +131,7 @@ function OrderTrackingTimeline({ status }: { status: string }) {
             );
           })}
         </div>
-        <div className="flex items-center gap-1 w-full">
+        <div className="hidden sm:flex items-center gap-1 w-full">
           {steps.slice(5).map((step, i) => {
             const done = status === "returned" || (status === "return_requested" && i === 0);
             const isCurrent = (status === "return_requested" && i === 0) || (status === "returned" && i === 1);
@@ -117,24 +153,30 @@ function OrderTrackingTimeline({ status }: { status: string }) {
     );
   }
 
+  const doneMap: Record<string, boolean> = {};
+  steps.forEach((s, i) => { doneMap[s.key] = i <= currentIdx; });
+
   return (
-    <div className="flex items-center gap-1 w-full">
-      {steps.map((step, i) => {
-        const done = i <= currentIdx;
-        const isCurrent = i === currentIdx;
-        return (
-          <div key={step.key} className="flex-1 flex flex-col items-center relative">
-            <div className="flex items-center w-full">
-              {i > 0 && <div className={`flex-1 h-0.5 ${done && i <= currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-gold-500 text-dark-950" : "bg-dark-800 text-dark-600 border border-dark-700"} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
-                <step.icon size={14} />
+    <div className="space-y-4">
+      <MobileTimeline steps={steps} doneMap={doneMap} currentKey={steps[currentIdx]?.key} />
+      <div className="hidden sm:flex items-center gap-1 w-full">
+        {steps.map((step, i) => {
+          const done = i <= currentIdx;
+          const isCurrent = i === currentIdx;
+          return (
+            <div key={step.key} className="flex-1 flex flex-col items-center relative">
+              <div className="flex items-center w-full">
+                {i > 0 && <div className={`flex-1 h-0.5 ${done && i <= currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-gold-500 text-dark-950" : "bg-dark-800 text-dark-600 border border-dark-700"} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
+                  <step.icon size={14} />
+                </div>
+                {i < steps.length - 1 && <div className={`flex-1 h-0.5 ${i < currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
               </div>
-              {i < steps.length - 1 && <div className={`flex-1 h-0.5 ${i < currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
+              <p className={`text-[10px] mt-1.5 font-medium text-center ${done ? "text-gold-400" : "text-dark-600"}`}>{step.label}</p>
             </div>
-            <p className={`text-[10px] mt-1.5 font-medium text-center ${done ? "text-gold-400" : "text-dark-600"}`}>{step.label}</p>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -238,19 +280,19 @@ export default function OrdersPage() {
             const expanded = expandedOrder === order.id;
             return (
               <div key={order.id} className="bg-dark-900/60 border border-dark-800/50 rounded-2xl overflow-hidden hover:border-gold-500/20 transition-colors">
-                <button onClick={() => setExpandedOrder(expanded ? null : order.id)} className="w-full flex items-center justify-between px-6 py-4 border-b border-dark-800/50 text-left hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center gap-4">
+                <button onClick={() => setExpandedOrder(expanded ? null : order.id)} className="w-full flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-dark-800/50 text-left hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center gap-4 min-w-0">
                     <div>
                       <p className="text-xs text-dark-500">Order #{order.id.slice(-8)}</p>
                       <p className="text-xs text-dark-600">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <span className={`text-xs font-medium px-3 py-1 rounded-full border ${statusColors[order.status] || statusColors.pending}`}>
                       <StatusIcon size={12} className="inline mr-1" />
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
-                    <span className="font-bold text-white">{formatPrice(order.totalAmount)}</span>
+                    <span className="font-bold text-white shrink-0">{formatPrice(order.totalAmount)}</span>
                     {expanded ? <ChevronUp size={16} className="text-dark-400 shrink-0" /> : <ChevronDown size={16} className="text-dark-400 shrink-0" />}
                   </div>
                 </button>
@@ -275,12 +317,12 @@ export default function OrdersPage() {
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="text-xs text-dark-500">
+                    <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 pt-2">
+                      <div className="text-xs text-dark-500 min-w-0 flex-1">
                         <p>{order.shippingAddress}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}</p>
                         <p className="mt-1 text-gold-400">Payment: {order.paymentMethod}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         {order.status === "confirmed" && (
                           <button onClick={() => setModalState({ type: "cancel", orderId: order.id })} className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
                             <X size={16} /> Cancel Order

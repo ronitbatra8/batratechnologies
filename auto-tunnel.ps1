@@ -3,12 +3,19 @@ param(
     [string]$Backend = "http://localhost:5000"
 )
 
+# Single-instance guard
+$LockFile = "E:\ronit\bca\e commerce\tunnel-watch.lock"
+$Lock = [System.IO.File]::Open($LockFile, [System.IO.FileMode]::Create, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+Write-Host "Watcher lock acquired (single instance)"
+
+$ErrorActionPreference = "Continue"
 $LogFile = "E:\ronit\bca\e commerce\tunnel-watch.log"
 $Vercel = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\vercel.cmd"
 $Cloudflared = "C:\Users\batra\AppData\Local\Temp\cloudflared.exe"
 $ServerEnv = "E:\ronit\bca\e commerce\server\.env"
-$NodeExe = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\node.exe"
-$ServerEntry = "E:\ronit\bca\e commerce\server\src\index.js"
+$Node = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\node.exe"
+$Pm2 = "C:\Users\batra\AppData\Local\Temp\node-fresh\node-v22.14.0-win-x64\node_modules\pm2\bin\pm2"
+$Root = "E:\ronit\bca\e commerce"
 $LastUrl = ""
 
 function Log($Msg) { $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"; "$ts $Msg" | Out-File $LogFile -Append; Write-Host "$ts $Msg" }
@@ -26,9 +33,9 @@ function Ensure-Tunnel {
     $running = Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue
     if (-not $running) {
         Log "Starting cloudflared..."
-        $p = Start-Process -PassThru -FilePath $Cloudflared -ArgumentList "tunnel", "--url", $Backend -WindowStyle Hidden -WorkingDirectory "E:\ronit\bca\e commerce"
-        Log "cloudflared PID: $($p.Id)"
+        Start-Process -FilePath $Cloudflared -ArgumentList "tunnel", "--url", $Backend -WindowStyle Hidden -WorkingDirectory $Root | Out-Null
         Start-Sleep -Seconds 20
+        Log "cloudflared started"
     }
 }
 
@@ -37,29 +44,27 @@ function Update-ServerEnv($Url) {
     $content = Get-Content $ServerEnv | Where-Object { $_ -notmatch '^TUNNEL_URL=' }
     $content += "TUNNEL_URL=$Url"
     $content | Set-Content $ServerEnv
-
-    Log "Restarting backend server..."
-    $nodeProcs = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { $_.Id -ne $pid }
-    foreach ($p in $nodeProcs) {
-        try { Stop-Process -Id $p.Id -Force } catch {}
-    }
-    Start-Sleep -Seconds 3
-    $np = Start-Process -PassThru -FilePath $NodeExe -ArgumentList "`"$ServerEntry`"" -WindowStyle Hidden -WorkingDirectory "E:\ronit\bca\e commerce\server"
-    Log "Backend restarted (PID: $($np.Id))"
+    Log "Restarting backend via pm2..."
+    $null = & $Node $Pm2 restart batra-backend 2>&1
     Start-Sleep -Seconds 8
 }
 
 function Update-Vercel($Url) {
     $api = "$Url/api"
     Log "Updating Vercel: NEXT_PUBLIC_API_URL = $api"
-    & $Vercel env rm NEXT_PUBLIC_API_URL production --yes 2>&1 | Out-Null
-    $api | & $Vercel env add NEXT_PUBLIC_API_URL production --yes 2>&1 | Out-Null
-    Log "Triggering redeploy..."
-    & $Vercel deploy --prod 2>&1 | Out-Null
-    Log "Redeploy triggered"
+    try {
+        $ErrorActionPreference = "Continue"
+        $null = & $Vercel env rm NEXT_PUBLIC_API_URL production --yes 2>&1
+        $null = $api | & $Vercel env add NEXT_PUBLIC_API_URL production --yes 2>&1
+        Log "Vercel env updated"
+    } catch { Log "WARN: Vercel env failed: $($_.Exception.Message)" }
+    try {
+        $null = & $Vercel deploy --prod 2>&1
+        Log "Vercel redeploy triggered"
+    } catch { Log "WARN: Vercel deploy failed: $($_.Exception.Message)" }
 }
 
-Log "=== Auto Tunnel Watcher Started ==="
+Log "=== Auto Tunnel Watcher Started (single instance) ==="
 Log "Backend: $Backend"
 Log "Interval: ${Interval}s"
 

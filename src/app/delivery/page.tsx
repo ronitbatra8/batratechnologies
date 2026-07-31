@@ -80,16 +80,16 @@ export default function DeliveryDashboard() {
   return (
     <div className="min-h-screen bg-dark-950 page-transition">
       <div className="max-w-5xl mx-auto px-6 pt-28 pb-24">
-        <div className="flex items-center justify-between mb-10">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
+          <div className="min-w-0">
             <span className="text-gold-400 text-xs font-semibold uppercase tracking-[0.3em]">Delivery Dashboard</span>
-            <h1 className="text-3xl font-display font-bold text-white mt-1">Welcome, {user.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mt-1 truncate">Welcome, {user.name}</h1>
           </div>
           <button onClick={handleRefresh} disabled={refreshing} className="flex items-center gap-2 text-dark-400 hover:text-gold-400 text-sm transition-colors mr-3"><RefreshCw size={16} className={refreshing ? "animate-spin" : ""} /> Refresh</button>
           <button onClick={logout} className="flex items-center gap-2 text-dark-400 hover:text-white text-sm transition-colors"><LogOut size={16} /> Sign Out</button>
         </div>
 
-          <div className="grid grid-cols-6 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-gold-400">{stats.total}</p><p className="text-xs text-dark-400 mt-1">Total Assigned</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-blue-400">{confirmedOrders.length}</p><p className="text-xs text-dark-400 mt-1">New Orders</p></div>
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-5 text-center"><p className="text-2xl font-bold text-purple-400">{shippedOrders.length}</p><p className="text-xs text-dark-400 mt-1">To Pick Up</p></div>

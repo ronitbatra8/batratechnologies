@@ -85,7 +85,7 @@ function RegisterContent() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs text-dark-400 uppercase tracking-wider mb-3 font-medium">I want to join as</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {ROLES.map((r) => {
                   const Icon = r.icon;
                   return (

@@ -75,7 +75,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
 
   return (
     <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-display font-bold text-white">Customer Reviews</h2>
           <div className="flex items-center gap-3 mt-2">
@@ -135,7 +135,7 @@ export default function ReviewsSection({ productId }: { productId: string }) {
         <div className="space-y-4">
           {reviews.map((review) => (
             <div key={review.id} className="bg-dark-800/30 rounded-xl p-5 border border-dark-800/50">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
                     <span className="text-gold-400 font-semibold text-xs">{review.user.name.charAt(0).toUpperCase()}</span>

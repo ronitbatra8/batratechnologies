@@ -134,9 +134,9 @@ export default function ContactPage() {
                       <label className="block text-xs text-dark-400 uppercase tracking-wider mb-2 font-medium">Message</label>
                       <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} placeholder="How can we help?" required className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-dark-500 focus:outline-none focus:border-gold-500 transition-colors resize-none" />
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <p className="text-xs text-dark-500">Signed in as <span className="text-gold-400">{user.name}</span></p>
-                      <button type="submit" disabled={loading} className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-gold-500/20 flex items-center gap-2 disabled:opacity-50">
+                      <button type="submit" disabled={loading} className="w-full sm:w-auto bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-gold-500/20 flex items-center justify-center gap-2 disabled:opacity-50">
                         <Send size={16} /> {loading ? "Sending..." : "Send Message"}
                       </button>
                     </div>

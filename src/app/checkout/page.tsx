@@ -172,11 +172,11 @@ export default function CheckoutPage() {
             <h1 className="text-4xl font-display font-bold text-white mb-3">Order Confirmed</h1>
             <p className="text-dark-400 mb-2">{paymentMethod === "UPI" ? "Pay via UPI at delivery." : "Pay on delivery."}</p>
             <p className="text-xs text-dark-600 mb-10">Order #{orderData?.id?.slice(-8) || "BT" + Date.now().toString().slice(-8)}</p>
-            <div className="flex gap-4 justify-center">
-              <Link href="/orders" className="bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 px-8 py-4 rounded-xl font-semibold inline-flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-gold-500/20">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+              <Link href="/orders" className="bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 px-8 py-4 rounded-xl font-semibold inline-flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-gold-500/20">
                 View Orders
               </Link>
-              <Link href="/products" className="border border-dark-700 text-dark-300 px-8 py-4 rounded-xl font-medium hover:border-dark-600 hover:text-white transition-all">
+              <Link href="/products" className="border border-dark-700 text-dark-300 px-8 py-4 rounded-xl font-medium hover:border-dark-600 hover:text-white transition-all inline-flex items-center justify-center">
                 Continue Shopping
               </Link>
             </div>
@@ -264,7 +264,7 @@ export default function CheckoutPage() {
                       <label className="block text-xs text-dark-400 uppercase tracking-wider mb-2 font-medium">Address</label>
                       <input type="text" value={shipping.address} onChange={(e) => setShipping({ ...shipping, address: e.target.value })} placeholder="House No, Street, Locality" required className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-dark-500 focus:outline-none focus:border-gold-500 transition-colors" />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       <div>
                         <label className="block text-xs text-dark-400 uppercase tracking-wider mb-2 font-medium">City</label>
                         <input type="text" value={shipping.city} onChange={(e) => setShipping({ ...shipping, city: e.target.value })} placeholder="Alwar" required className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-dark-500 focus:outline-none focus:border-gold-500 transition-colors" />
@@ -354,9 +354,9 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-2 text-xs text-dark-500">
                   <Lock size={13} className="text-green-500/60" /> Your data is encrypted and secure
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <button type="button" onClick={() => setStep(1)} className="border border-dark-700 text-dark-300 px-6 py-4 rounded-xl font-medium hover:border-dark-600 hover:text-white transition-all">Back</button>
-                  <button type="submit" disabled={loading} className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-gold-500/20 flex items-center gap-2 disabled:opacity-50">
+                  <button type="submit" disabled={loading} className="bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-dark-950 px-8 py-4 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-gold-500/20 flex items-center justify-center gap-2 disabled:opacity-50">
                     {loading ? "Placing Order..." : <><Lock size={16} /> Place Order — {formatPrice(total)}</>}
                   </button>
                 </div>

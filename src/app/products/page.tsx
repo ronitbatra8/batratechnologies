@@ -194,7 +194,7 @@ function ProductsContent() {
         </aside>
 
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-8 bg-dark-900/60 border border-dark-800/50 rounded-xl px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-8 bg-dark-900/60 border border-dark-800/50 rounded-xl px-4 py-3">
             <div className="flex items-center gap-2 flex-wrap">
               {searchQuery && (
                 <span className="bg-gold-500/10 text-gold-400 text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 font-medium">

@@ -119,7 +119,7 @@ function VerifyOTPContent() {
           {resendMsg && <p className="text-green-400 text-sm mb-4 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">{resendMsg}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex justify-center gap-3" onPaste={handlePaste}>
+            <div className="grid grid-cols-6 gap-2 sm:gap-3 max-w-sm mx-auto w-full" onPaste={handlePaste}>
               {otp.map((digit, i) => (
                 <input
                   key={i}
@@ -130,7 +130,7 @@ function VerifyOTPContent() {
                   value={digit}
                   onChange={(e) => handleChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-xl font-bold bg-dark-800 border border-dark-700 rounded-xl text-white focus:outline-none focus:border-gold-500 transition-colors"
+                  className="w-full aspect-square text-center text-xl font-bold bg-dark-800 border border-dark-700 rounded-xl text-white focus:outline-none focus:border-gold-500 transition-colors min-w-0"
                 />
               ))}
             </div>

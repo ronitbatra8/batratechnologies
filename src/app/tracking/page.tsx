@@ -97,7 +97,30 @@ export default function TrackingPage() {
             </div>
           ) : isReturned ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-1 w-full">
+              <div className="sm:hidden w-full">
+                {steps.map((step, i) => {
+                  const isReturnStep = step.key === "return_requested" || step.key === "returned";
+                  const done = isReturnStep ? (currentStatus === "returned" || step.key === "return_requested") : true;
+                  const isCurrent = step.key === currentStatus;
+                  const circle = done ? (isReturnStep ? "bg-purple-500 text-white" : "bg-gold-500 text-dark-950") : "bg-dark-800 text-dark-600 border border-dark-700";
+                  const line = done ? (isReturnStep ? "bg-purple-500" : "bg-gold-500") : "bg-dark-700";
+                  const label = done ? (isReturnStep ? "text-purple-400" : "text-gold-400") : "text-dark-600";
+                  return (
+                    <div key={step.key} className="flex gap-3">
+                      <div className="flex flex-col items-center shrink-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${circle} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
+                          <step.icon size={14} />
+                        </div>
+                        {i < steps.length - 1 && <div className={`w-0.5 flex-1 my-0.5 min-h-4 ${line}`} />}
+                      </div>
+                      <div className="pt-1.5 pb-4 min-w-0">
+                        <p className={`text-sm font-medium ${label}`}>{step.label}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="hidden sm:flex items-center gap-1 w-full">
                 {steps.slice(0, 5).map((step, i) => (
                   <div key={step.key} className="flex-1 flex flex-col items-center relative">
                     <div className="flex items-center w-full">
@@ -109,7 +132,7 @@ export default function TrackingPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-1 w-full max-w-[50%] mx-auto">
+              <div className="hidden sm:flex items-center gap-1 w-full max-w-[50%] mx-auto">
                 {steps.slice(5).map((step, i) => {
                   const done = currentStatus === "returned" || (currentStatus === "return_requested" && i === 0);
                   const isCurrent = (currentStatus === "return_requested" && i === 0) || (currentStatus === "returned" && i === 1);
@@ -129,23 +152,46 @@ export default function TrackingPage() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-1 w-full">
-              {steps.map((step, i) => {
-                const done = i <= currentIdx;
-                const isCurrent = i === currentIdx;
-                return (
-                  <div key={step.key} className="flex-1 flex flex-col items-center relative">
-                    <div className="flex items-center w-full">
-                      {i > 0 && <div className={`flex-1 h-0.5 ${done && i <= currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-gold-500 text-dark-950" : "bg-dark-800 text-dark-600 border border-dark-700"} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
-                        <step.icon size={14} />
+            <div className="space-y-4">
+              <div className="sm:hidden w-full">
+                {steps.map((step, i) => {
+                  const done = i <= currentIdx;
+                  const isCurrent = i === currentIdx;
+                  const circle = done ? "bg-gold-500 text-dark-950" : "bg-dark-800 text-dark-600 border border-dark-700";
+                  const line = done ? "bg-gold-500" : "bg-dark-700";
+                  return (
+                    <div key={step.key} className="flex gap-3">
+                      <div className="flex flex-col items-center shrink-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${circle} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
+                          <step.icon size={14} />
+                        </div>
+                        {i < steps.length - 1 && <div className={`w-0.5 flex-1 my-0.5 min-h-4 ${line}`} />}
                       </div>
-                      {i < steps.length - 1 && <div className={`flex-1 h-0.5 ${i < currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
+                      <div className="pt-1.5 pb-4 min-w-0">
+                        <p className={`text-sm font-medium ${done ? "text-gold-400" : "text-dark-600"}`}>{step.label}</p>
+                      </div>
                     </div>
-                    <p className={`text-[10px] mt-1.5 font-medium text-center ${done ? "text-gold-400" : "text-dark-600"}`}>{step.label}</p>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+              <div className="hidden sm:flex items-center gap-1 w-full">
+                {steps.map((step, i) => {
+                  const done = i <= currentIdx;
+                  const isCurrent = i === currentIdx;
+                  return (
+                    <div key={step.key} className="flex-1 flex flex-col items-center relative">
+                      <div className="flex items-center w-full">
+                        {i > 0 && <div className={`flex-1 h-0.5 ${done && i <= currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${done ? "bg-gold-500 text-dark-950" : "bg-dark-800 text-dark-600 border border-dark-700"} ${isCurrent ? "ring-2 ring-gold-500/30 ring-offset-2 ring-offset-dark-900" : ""}`}>
+                          <step.icon size={14} />
+                        </div>
+                        {i < steps.length - 1 && <div className={`flex-1 h-0.5 ${i < currentIdx ? "bg-gold-500" : "bg-dark-700"}`} />}
+                      </div>
+                      <p className={`text-[10px] mt-1.5 font-medium text-center ${done ? "text-gold-400" : "text-dark-600"}`}>{step.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

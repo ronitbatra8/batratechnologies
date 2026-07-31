@@ -109,7 +109,7 @@ export default function SecurityTab({
                   )}
                 </div>
 
-                <div className="ml-14 flex items-center gap-0">
+                <div className="ml-0 sm:ml-14 flex flex-wrap items-center gap-2 sm:gap-0">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-yellow-400" />
                     <span className="text-[10px] text-dark-400">Requested</span>

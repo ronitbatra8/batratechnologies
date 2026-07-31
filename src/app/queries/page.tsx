@@ -53,7 +53,7 @@ export default function QueriesPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 pt-32 pb-24 page-transition">
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-12">
         <div>
           <span className="text-gold-400 text-xs font-semibold uppercase tracking-[0.3em]">Support</span>
           <h1 className="text-4xl md:text-5xl font-display font-bold text-white mt-2">My Queries</h1>

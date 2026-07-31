@@ -86,7 +86,7 @@ export default function ProductDetailClient() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 page-transition">
-      <nav className="flex items-center gap-2 text-sm text-dark-500 mb-10">
+      <nav className="flex flex-wrap items-center gap-2 text-sm text-dark-500 mb-10">
         <Link href="/" className="hover:text-gold-400 transition-colors">Home</Link>
         <ChevronRight size={12} />
         <Link href="/products" className="hover:text-gold-400 transition-colors">Products</Link>
@@ -167,7 +167,7 @@ export default function ProductDetailClient() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { icon: Truck, label: "Free Shipping" },
               { icon: Shield, label: "2-Year Warranty" },

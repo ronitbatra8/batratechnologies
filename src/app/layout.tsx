@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,6 +16,12 @@ import WhatsAppWidget from "@/components/WhatsAppWidget";
 export const metadata: Metadata = {
   title: "Batra Technologies | Luxury Electronics",
   description: "Curated premium electronics for the discerning few. Batra Technologies — where technology meets luxury.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
