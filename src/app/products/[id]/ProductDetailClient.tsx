@@ -181,17 +181,19 @@ export default function ProductDetailClient() {
         </div>
       </div>
 
-      <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-8 mb-24">
-        <h2 className="text-2xl font-display font-bold text-white mb-8">Specifications</h2>
-        <div className="grid md:grid-cols-2 gap-x-12 gap-y-1">
-          {Object.entries(product.specifications).map(([key, value], i) => (
-            <div key={key} className={`flex justify-between py-4 ${i < Object.entries(product.specifications).length - 1 ? "border-b border-dark-800/50" : ""}`}>
-              <span className="text-dark-500 text-sm">{key}</span>
-              <span className="font-medium text-white text-sm">{value}</span>
-            </div>
-          ))}
+      {Object.keys(product.specifications).length > 0 && (
+        <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-8 mb-24">
+          <h2 className="text-2xl font-display font-bold text-white mb-8">Specifications</h2>
+          <div className="grid md:grid-cols-2 gap-x-12 gap-y-1">
+            {Object.entries(product.specifications).map(([key, value], i) => (
+              <div key={key} className={`flex justify-between py-4 ${i < Object.entries(product.specifications).length - 1 ? "border-b border-dark-800/50" : ""}`}>
+                <span className="text-dark-500 text-sm">{key}</span>
+                <span className="font-medium text-white text-sm">{value}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mb-24">
         <ReviewsSection productId={product.id} />

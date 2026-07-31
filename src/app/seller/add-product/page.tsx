@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import SellerImageUpload from "@/components/SellerImageUpload";
+import SellerSpecsEditor from "@/components/SellerSpecsEditor";
 import { ArrowLeft, Plus } from "lucide-react";
 
 const CATEGORIES = ["smartphones", "wearables", "audio", "accessories"];
@@ -13,7 +14,7 @@ const CATEGORIES = ["smartphones", "wearables", "audio", "accessories"];
 export default function AddProduct() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", brand: "", category: "smartphones", price: "", originalPrice: "", description: "", features: "", images: "", inStock: true, badge: "" });
+  const [form, setForm] = useState({ name: "", brand: "", category: "smartphones", price: "", originalPrice: "", description: "", features: "", images: "", inStock: true, badge: "", specs: [] as { key: string; value: string }[] });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -33,6 +34,7 @@ export default function AddProduct() {
           name: form.name, brand: form.brand, category: form.category, price: parseFloat(form.price),
           originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : null, description: form.description,
           features: form.features.split("\n").filter(Boolean), images: form.images.split("\n").filter(Boolean),
+          specifications: Object.fromEntries(form.specs.filter(s => s.key.trim() && s.value.trim()).map(s => [s.key.trim(), s.value.trim()])),
           inStock: form.inStock, badge: form.badge || null,
         }),
       });
@@ -55,6 +57,7 @@ export default function AddProduct() {
           <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs text-dark-400 uppercase tracking-wider mb-2">Price</label><input type="number" value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors" /></div><div><label className="block text-xs text-dark-400 uppercase tracking-wider mb-2">Original Price</label><input type="number" value={form.originalPrice} onChange={e => setForm({...form, originalPrice: e.target.value})} className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors" /></div></div>
           <div><label className="block text-xs text-dark-400 uppercase tracking-wider mb-2">Description</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3} className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors resize-none" /></div>
           <div><label className="block text-xs text-dark-400 uppercase tracking-wider mb-2">Features (one per line)</label><textarea value={form.features} onChange={e => setForm({...form, features: e.target.value})} rows={3} className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors resize-none" /></div>
+          <SellerSpecsEditor value={form.specs} onChange={specs => setForm({ ...form, specs })} />
           <SellerImageUpload value={form.images} onChange={v => setForm({ ...form, images: v })} />
           <div className="grid grid-cols-2 gap-4"><div><label className="block text-xs text-dark-400 uppercase tracking-wider mb-2">Badge</label><input value={form.badge} onChange={e => setForm({...form, badge: e.target.value})} className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors" /></div><div><label className="block text-xs text-dark-400 uppercase tracking-wider mb-2">In Stock</label><select value={form.inStock ? "yes" : "no"} onChange={e => setForm({...form, inStock: e.target.value === "yes"})} className="w-full bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors"><option value="yes">Yes</option><option value="no">No</option></select></div></div>
 
