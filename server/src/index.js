@@ -18,6 +18,7 @@ const messageRoutes = require("./routes/messages");
 const deliveryRoutes = require("./routes/delivery");
 const sellerRoutes = require("./routes/seller");
 const cartRoutes = require("./routes/cart");
+const { createRateLimiter } = require("./utils/rateLimit");
 const { sendAbandonedCartEmail } = require("./utils/email");
 
 const app = express();
@@ -38,12 +39,36 @@ const allowedOrigins = [
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (allowedOrigins.some((a) => origin === a || origin.endsWith(".vercel.app"))) return cb(null, true);
-    cb(null, true);
+    if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.endsWith(".netlify.app")) return cb(null, true);
+    return cb(new Error("Origin not allowed by CORS"));
   },
   credentials: true,
 }));
 app.use(express.json({ limit: "10kb" }));
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  next();
+});
+
+const authLimiter = createRateLimiter({ windowMs: 60 * 1000, max: 20 });
+const strictAuthLimiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 30 });
+const adminLimiter = createRateLimiter({ windowMs: 60 * 1000, max: 120 });
+const globalLimiter = createRateLimiter({ windowMs: 60 * 1000, max: 600 });
+
+app.use("/api/auth/login", strictAuthLimiter);
+app.use("/api/auth/forgot-password", strictAuthLimiter);
+app.use("/api/auth/send-otp", authLimiter);
+app.use("/api/auth/resend-otp", authLimiter);
+app.use("/api/auth/verify-otp", authLimiter);
+app.use("/api/auth/verify-reset-code", authLimiter);
+app.use("/api/auth/reset-password", strictAuthLimiter);
+app.use("/api/admin", adminLimiter);
+app.use("/api", globalLimiter);
 
 if (isProduction) {
   const outDir = path.join(__dirname, "../../out");
@@ -79,6 +104,9 @@ if (isProduction) {
 }
 
 app.use((err, req, res, next) => {
+  if (err && err.message && err.message.includes("CORS")) {
+    return res.status(403).json({ error: "Origin not allowed by CORS" });
+  }
   console.error("Unhandled error:", err);
   res.status(500).json({ error: isProduction ? "An internal error occurred" : (err.message || "An internal error occurred") });
 });

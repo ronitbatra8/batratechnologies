@@ -205,8 +205,11 @@ export default function TrackingPage() {
             </div>
             <div className="bg-dark-800/30 border border-dark-700/50 rounded-xl p-4">
               <p className="text-xs text-dark-500 uppercase tracking-wider mb-2 font-medium flex items-center gap-1.5"><CreditCard size={12} /> Payment</p>
-              <p className="text-gold-400 text-sm font-semibold">{order.paymentMethod || "COD"}</p>
+              <p className="text-gold-400 text-sm font-semibold">Online Payment{order.paymentStatus === "APPROVED" ? " · Paid" : order.paymentStatus === "PENDING" ? " · Pending" : order.paymentStatus ? ` · ${order.paymentStatus}` : ""}</p>
               <p className="text-white text-lg font-bold mt-2">{formatPrice(order.totalAmount || 0)}</p>
+              {order.paymentStatus === "PENDING" && (
+                <p className="text-amber-400 text-xs mt-2">Complete payment within 24 hours to keep this order confirmed.</p>
+              )}
             </div>
           </div>
 

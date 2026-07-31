@@ -12,9 +12,13 @@ import {
   CreditCard,
   UserCheck,
   Loader2,
+  Check,
+  X,
+  Clock,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { statusColors, API, adminHeaders } from "./types";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const statusGradients: Record<string, string> = {
   pending: "from-yellow-500/15 to-yellow-500/5",
@@ -43,6 +47,7 @@ export default function OrdersTab({
   updatingId,
   onStatusUpdate,
   onAssign,
+  onPaymentAction,
   focusOrderId,
   onFocusHandled,
   adminKey,
@@ -51,6 +56,7 @@ export default function OrdersTab({
   updatingId: string | null;
   onStatusUpdate: (orderId: string, status: string) => void;
   onAssign?: (orderId: string, deliveryId: string) => void;
+  onPaymentAction?: (orderId: string, action: "approve" | "reject") => void;
   focusOrderId?: string | null;
   onFocusHandled?: () => void;
   adminKey?: string;
@@ -61,6 +67,8 @@ export default function OrdersTab({
   const [deliveryExecs, setDeliveryExecs] = useState<any[]>([]);
   const [assignSelections, setAssignSelections] = useState<Record<string, string>>({});
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [pendingStatusAction, setPendingStatusAction] = useState<{ orderId: string; status: string } | null>(null);
+  const [pendingPaymentAction, setPendingPaymentAction] = useState<{ orderId: string; action: "approve" | "reject" } | null>(null);
   const lastFocusRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -110,7 +118,8 @@ export default function OrdersTab({
 
   function handleStatusChange(orderId: string, status: string) {
     if (status === "cancelled") {
-      if (!confirm("Are you sure you want to cancel this order?")) return;
+      setPendingStatusAction({ orderId, status });
+      return;
     }
     onStatusUpdate(orderId, status);
   }
@@ -442,16 +451,50 @@ export default function OrdersTab({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 bg-dark-800/30 rounded-xl px-4 py-2">
-                        <CreditCard className="w-4 h-4 text-gold-400" />
-                        <div>
-                          <div className="text-xs text-dark-500">Payment</div>
-                          <div className="text-gold-400 text-sm font-medium">{order.paymentMethod || "N/A"}</div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-dark-800/30 rounded-xl px-4 py-2">
+                        <div className="flex items-center gap-3">
+                          <CreditCard className="w-4 h-4 text-gold-400" />
+                          <div>
+                            <div className="text-xs text-dark-500">Payment</div>
+                            <div className="text-gold-400 text-sm font-medium">
+                              {order.paymentMethod === "ONLINE" ? "Online" : order.paymentMethod || "N/A"}
+                              <span className={`ml-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${
+                                order.paymentStatus === "APPROVED"
+                                  ? "bg-green-500/15 text-green-400 border border-green-500/30"
+                                  : order.paymentStatus === "FAILED" || order.paymentStatus === "EXPIRED"
+                                  ? "bg-red-500/15 text-red-400 border border-red-500/30"
+                                  : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                              }`}>
+                                {order.paymentStatus || "PENDING"}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         <div className="border-l border-dark-700 pl-3 ml-1">
                           <div className="text-xs text-dark-500">Total</div>
                           <div className="text-white font-bold text-lg">{formatPrice(order.totalAmount || 0)}</div>
                         </div>
+                        {order.paymentStatus === "PENDING" && order.status !== "cancelled" && onPaymentAction && (
+                          <div className="flex flex-wrap items-center gap-2 sm:border-l sm:border-dark-700 sm:pl-3 sm:ml-1">
+                            <button
+                              onClick={() => setPendingPaymentAction({ orderId: order.id, action: "approve" })}
+                              disabled={updatingId === order.id}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/20 border border-green-500/30 rounded-lg text-xs text-green-300 font-medium hover:bg-green-500/30 transition-colors disabled:opacity-50"
+                            >
+                              {updatingId === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Approve Payment
+                            </button>
+                            <button
+                              onClick={() => setPendingPaymentAction({ orderId: order.id, action: "reject" })}
+                              disabled={updatingId === order.id}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-lg text-xs text-red-300 font-medium hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                            >
+                              {updatingId === order.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />} Reject
+                            </button>
+                          </div>
+                        )}
+                        {order.paymentStatus === "PENDING" && order.status !== "cancelled" && !onPaymentAction && (
+                          <span className="flex items-center gap-1.5 text-[10px] text-amber-400 font-medium uppercase"><Clock className="w-3 h-3" /> Payment approval required</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -461,6 +504,35 @@ export default function OrdersTab({
           })}
         </div>
       )}
+
+      <ConfirmModal
+        open={!!pendingStatusAction}
+        title="Cancel Order?"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        confirmLabel="Yes, Cancel Order"
+        variant="danger"
+        onConfirm={() => {
+          if (pendingStatusAction) onStatusUpdate(pendingStatusAction.orderId, pendingStatusAction.status);
+          setPendingStatusAction(null);
+        }}
+        onCancel={() => setPendingStatusAction(null)}
+      />
+      <ConfirmModal
+        open={!!pendingPaymentAction}
+        title={pendingPaymentAction?.action === "approve" ? "Approve Payment?" : "Reject Payment?"}
+        message={
+          pendingPaymentAction?.action === "approve"
+            ? "Confirm that this payment has been received. The order will be marked as confirmed and the customer will be notified."
+            : "Rejecting the payment will cancel this order and notify the customer. Are you sure?"
+        }
+        confirmLabel={pendingPaymentAction?.action === "approve" ? "Yes, Approve Payment" : "Yes, Reject Payment"}
+        variant={pendingPaymentAction?.action === "approve" ? "default" : "danger"}
+        onConfirm={() => {
+          if (pendingPaymentAction) onPaymentAction?.(pendingPaymentAction.orderId, pendingPaymentAction.action);
+          setPendingPaymentAction(null);
+        }}
+        onCancel={() => setPendingPaymentAction(null)}
+      />
     </div>
   );
 }

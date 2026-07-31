@@ -23,7 +23,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
   const [saveAddress, setSaveAddress] = useState(true);
   const [addressLabel, setAddressLabel] = useState("Home");
-  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const paymentMethod = "ONLINE";
 
   const [shipping, setShipping] = useState({
     name: "",
@@ -169,8 +169,8 @@ export default function CheckoutPage() {
             </div>
           </div>
           <div className={`transition-all duration-500 ${successStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-            <h1 className="text-4xl font-display font-bold text-white mb-3">Order Confirmed</h1>
-            <p className="text-dark-400 mb-2">{paymentMethod === "UPI" ? "Pay via UPI at delivery." : "Pay on delivery."}</p>
+            <h1 className="text-4xl font-display font-bold text-white mb-3">Order Placed</h1>
+            <p className="text-dark-400 mb-2">Complete your online payment within 24 hours to confirm this order.</p>
             <p className="text-xs text-dark-600 mb-10">Order #{orderData?.id?.slice(-8) || "BT" + Date.now().toString().slice(-8)}</p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link href="/orders" className="bg-gradient-to-r from-gold-500 to-gold-600 text-dark-950 px-8 py-4 rounded-xl font-semibold inline-flex items-center justify-center gap-2 transition-all hover:shadow-lg hover:shadow-gold-500/20">
@@ -330,25 +330,14 @@ export default function CheckoutPage() {
                 </div>
                 <div className="space-y-3">
                   <p className="text-xs text-dark-400 uppercase tracking-wider font-medium">Payment Method</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setPaymentMethod("COD")} className={`p-4 rounded-xl border text-left transition-all ${paymentMethod === "COD" ? "bg-gold-500/10 border-gold-500/30" : "bg-dark-800/50 border-dark-700/50 hover:border-dark-600"}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "COD" ? "border-gold-500" : "border-dark-600"}`}>
-                          {paymentMethod === "COD" && <div className="w-2 h-2 rounded-full bg-gold-500" />}
-                        </div>
-                        <span className="text-sm font-medium text-white">Cash on Delivery</span>
+                  <div className="p-4 rounded-xl border transition-all bg-gold-500/10 border-gold-500/30">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-4 h-4 rounded-full border-2 border-gold-500 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-gold-500" />
                       </div>
-                      <p className="text-xs text-dark-400 ml-6">Pay with cash when delivered</p>
-                    </button>
-                    <button type="button" onClick={() => setPaymentMethod("UPI")} className={`p-4 rounded-xl border text-left transition-all ${paymentMethod === "UPI" ? "bg-purple-500/10 border-purple-500/30" : "bg-dark-800/50 border-dark-700/50 hover:border-dark-600"}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === "UPI" ? "border-purple-500" : "border-dark-600"}`}>
-                          {paymentMethod === "UPI" && <div className="w-2 h-2 rounded-full bg-purple-500" />}
-                        </div>
-                        <span className="text-sm font-medium text-white">UPI on Delivery</span>
-                      </div>
-                      <p className="text-xs text-dark-400 ml-6">Pay via UPI at your doorstep</p>
-                    </button>
+                      <span className="text-sm font-medium text-white">Online Payment (UPI)</span>
+                    </div>
+                    <p className="text-xs text-dark-400 ml-6">Pay via UPI after placing your order. Your order is confirmed once payment is approved — complete it within 24 hours.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-dark-500">

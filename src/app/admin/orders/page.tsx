@@ -85,6 +85,18 @@ export default function AdminPage() {
     setUpdatingId(null);
   }, [adminKey, loadAll]);
 
+  const paymentAction = useCallback(async (orderId: string, action: "approve" | "reject") => {
+    setUpdatingId(orderId);
+    try {
+      const res = await fetch(`${API}/api/admin/orders/${orderId}/payment`, {
+        method: "PUT", headers: adminHeaders(adminKey), body: JSON.stringify({ action }),
+      });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Request failed"); }
+      loadAll();
+    } catch (e: any) { alert(e.message || "Failed to update payment"); }
+    setUpdatingId(null);
+  }, [adminKey, loadAll]);
+
   const handleSignOut = useCallback(() => {
     setAuthenticated(false);
     setAdminKey("");
@@ -127,7 +139,7 @@ export default function AdminPage() {
       <main className="lg:ml-64 pt-28 lg:pt-8 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {tab === "overview" && <OverviewTab stats={stats} orders={orders} passwordResets={passwordResets} messages={messages} onNavigate={handleNavigateToTab} />}
-          {tab === "orders" && <OrdersTab orders={orders} updatingId={updatingId} onStatusUpdate={updateStatus} onAssign={assignOrder} focusOrderId={focusOrderId} onFocusHandled={() => setFocusOrderId(null)} adminKey={adminKey} />}
+          {tab === "orders" && <OrdersTab orders={orders} updatingId={updatingId} onStatusUpdate={updateStatus} onAssign={assignOrder} onPaymentAction={paymentAction} focusOrderId={focusOrderId} onFocusHandled={() => setFocusOrderId(null)} adminKey={adminKey} />}
           {tab === "users" && <UsersTab users={users} adminKey={adminKey} onNavigate={handleNavigateToTab} />}
           {tab === "messages" && <MessagesTab messages={messages} adminKey={adminKey} setMessages={setMessages} />}
           {tab === "security" && <SecurityTab passwordResets={passwordResets} adminKey={adminKey} />}

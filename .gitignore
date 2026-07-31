@@ -20,3 +20,4 @@ dev-errors.txt
 .vercel
 tunnel-watch.log
 watch-errors.txt
+startup.log

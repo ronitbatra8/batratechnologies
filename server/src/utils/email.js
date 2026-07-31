@@ -61,7 +61,7 @@ async function sendOrderConfirmation(to, name, order) {
   await transporter.sendMail({
     from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
     to,
-    subject: `Order Confirmed — #${order.id.slice(-8).toUpperCase()} — Batra Technologies`,
+    subject: `Order Placed — #${order.id.slice(-8).toUpperCase()} — Batra Technologies`,
     html: `
       <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:40px;border-radius:16px;">
         ${HEADER}
@@ -71,7 +71,7 @@ async function sendOrderConfirmation(to, name, order) {
           <p style="color:#666;font-size:12px;margin:0;">${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
         </div>
         <p style="color:#999;font-size:14px;margin:0 0 4px;">Hello ${escapeHtml(name)},</p>
-        <p style="color:#999;font-size:14px;margin:0 0 20px;">Your order has been confirmed. Here are the details:</p>
+        <p style="color:#999;font-size:14px;margin:0 0 20px;">Your order has been placed. Here are the details:</p>
         <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
           <tr style="border-bottom:1px solid #333;">
             <td style="padding:8px 0;color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Item</td>
@@ -105,8 +105,41 @@ async function sendOrderConfirmation(to, name, order) {
         </div>
         <div style="background:#111;border:1px solid #222;border-radius:12px;padding:16px;text-align:center;">
           <p style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Payment Method</p>
-          <p style="color:#d4a853;font-size:14px;font-weight:bold;margin:0;">Cash on Delivery</p>
+          <p style="color:#d4a853;font-size:14px;font-weight:bold;margin:0;">Online Payment (UPI)</p>
         </div>
+        <div style="background:#1a1a0a;border:1px solid #d4a85344;border-radius:12px;padding:16px;margin-top:16px;text-align:center;">
+          <p style="color:#d4a853;font-size:13px;font-weight:bold;margin:0 0 4px;">Action Required</p>
+          <p style="color:#999;font-size:12px;margin:0;line-height:1.6;">Complete your online payment within 24 hours of placing this order. Your order will be confirmed once payment is approved. If payment is not confirmed within 24 hours, the order will be cancelled automatically.</p>
+        </div>
+        ${FOOTER}
+      </div>
+    `,
+  });
+}
+
+async function sendPaymentApprovedEmail(to, name, order) {
+  if (!to) return;
+  const total = Number(order.totalAmount) || 0;
+  await transporter.sendMail({
+    from: `"Batra Technologies" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `Payment Approved — #${order.id.slice(-8).toUpperCase()} — Batra Technologies`,
+    html: `
+      <div style="max-width:480px;margin:0 auto;font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:40px;border-radius:16px;">
+        ${HEADER}
+        <div style="background:#0a1a0f;border:1px solid #22c55e44;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+          <p style="color:#666;font-size:12px;margin:0;text-transform:uppercase;letter-spacing:2px;">Order #${order.id.slice(-8).toUpperCase()}</p>
+          <div style="display:inline-block;background:#22c55e22;color:#22c55e;font-size:16px;font-weight:bold;padding:8px 24px;border-radius:8px;margin-top:12px;border:1px solid #22c55e44;">
+            Payment Approved
+          </div>
+        </div>
+        <p style="color:#999;font-size:14px;margin:0 0 4px;">Hello ${escapeHtml(name)},</p>
+        <p style="color:#999;font-size:14px;margin:0 0 20px;">Your payment of <strong style="color:#d4a853;">₹${total.toLocaleString("en-IN")}</strong> has been approved. Your order is now confirmed and will be shipped soon.</p>
+        <div style="background:#111;border:1px solid #222;border-radius:12px;padding:16px;text-align:center;margin-bottom:24px;">
+          <p style="color:#666;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px;">Total Paid</p>
+          <p style="color:#d4a853;font-size:18px;font-weight:bold;margin:0;">₹${total.toLocaleString("en-IN")}</p>
+        </div>
+        <p style="color:#666;font-size:12px;margin:0;text-align:center;">Track your order on the Batra Technologies website.</p>
         ${FOOTER}
       </div>
     `,
@@ -343,4 +376,4 @@ async function sendAbandonedCartEmail(to, name, items) {
   });
 }
 
-module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail, sendReturnCodeEmail, sendAbandonedCartEmail };
+module.exports = { generateOTP, sendOTPEmail, sendOrderConfirmation, sendPaymentApprovedEmail, sendOrderStatusUpdate, sendQueryReply, sendResetPasswordEmail, sendPasswordChangedEmail, sendAdminEmail, sendDeliveryCodeEmail, sendReturnCodeEmail, sendAbandonedCartEmail };

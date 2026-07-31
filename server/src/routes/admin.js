@@ -1,19 +1,29 @@
 const express = require("express");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const prisma = require("../prisma");
-const { sendOrderStatusUpdate, sendAdminEmail } = require("../utils/email");
+const { sendOrderStatusUpdate, sendAdminEmail, sendPaymentApprovedEmail } = require("../utils/email");
 const { VALID_ORDER_STATUSES, safeErrorMessage } = require("../utils/helpers");
+const { expireUnpaidOrders } = require("../utils/payments");
 
 const router = express.Router();
 
+function safeEqual(a, b) {
+  const ba = Buffer.from(String(a || ""));
+  const bb = Buffer.from(String(b || ""));
+  if (ba.length !== bb.length || ba.length === 0) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
 function adminAuth(req, res, next) {
   const key = req.headers["x-admin-key"];
-  if (key !== process.env.ADMIN_KEY) return res.status(403).json({ error: "Invalid admin key" });
+  if (!safeEqual(key, process.env.ADMIN_KEY)) return res.status(403).json({ error: "Invalid admin key" });
   next();
 }
 
 router.get("/orders", adminAuth, async (req, res) => {
   try {
+    try { await expireUnpaidOrders(prisma); } catch (expErr) { console.error("Expire unpaid orders failed:", expErr.message); }
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: "desc" },
       include: {
@@ -78,6 +88,56 @@ router.put("/orders/:id/status", adminAuth, async (req, res) => {
   }
 });
 
+router.put("/orders/:id/payment", adminAuth, async (req, res) => {
+  try {
+    const { action } = req.body;
+    if (action !== "approve" && action !== "reject") {
+      return res.status(400).json({ error: "action must be 'approve' or 'reject'" });
+    }
+    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (order.paymentStatus !== "PENDING") {
+      return res.status(400).json({ error: `Payment is not pending (current: ${order.paymentStatus})` });
+    }
+    if (order.status !== "pending" && order.status !== "confirmed") {
+      return res.status(400).json({ error: `Payment can only be approved while the order is pending or confirmed (current: ${order.status})` });
+    }
+
+    if (action === "approve") {
+      const updated = await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: "APPROVED",
+          paymentApprovedAt: new Date(),
+          ...(order.status === "pending" ? { status: "confirmed" } : {}),
+        },
+      });
+      try {
+        const user = await prisma.user.findUnique({ where: { id: order.userId }, select: { email: true, name: true } });
+        if (user && user.email) {
+          await sendPaymentApprovedEmail(user.email, user.name || "Customer", order);
+        }
+      } catch (emailErr) {
+        console.error("Payment approved email failed:", emailErr.message);
+      }
+      return res.json(updated);
+    }
+
+    const updated = await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        paymentStatus: "FAILED",
+        status: "cancelled",
+        cancelledAt: new Date(),
+        cancelReason: "Payment was rejected by admin",
+      },
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: safeErrorMessage(err) });
+  }
+});
+
 router.get("/users", adminAuth, async (req, res) => {
   try {
     const users = await prisma.user.findMany({
@@ -101,6 +161,7 @@ router.get("/stats", adminAuth, async (req, res) => {
     const totalProducts = await prisma.product.count();
     const revenue = await prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: "delivered" } });
     const pendingOrders = await prisma.order.count({ where: { status: "pending" } });
+    const pendingPaymentOrders = await prisma.order.count({ where: { paymentStatus: "PENDING", status: { notIn: ["cancelled", "delivered", "returned", "return_requested"] } } });
     const confirmedOrders = await prisma.order.count({ where: { status: "confirmed" } });
     const outForDeliveryOrders = await prisma.order.count({ where: { status: "out_for_delivery" } });
     const deliveredOrders = await prisma.order.count({ where: { status: "delivered" } });
@@ -109,7 +170,7 @@ router.get("/stats", adminAuth, async (req, res) => {
     res.json({
       totalOrders, totalUsers, totalProducts,
       totalRevenue: revenue._sum.totalAmount || 0,
-      pendingOrders, confirmedOrders, outForDeliveryOrders, deliveredOrders, returnedOrders, returnRequests,
+      pendingOrders, pendingPaymentOrders, confirmedOrders, outForDeliveryOrders, deliveredOrders, returnedOrders, returnRequests,
     });
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
@@ -144,7 +205,7 @@ router.get("/users/:id", adminAuth, async (req, res) => {
             id: true, items: true, totalAmount: true, status: true,
             shippingName: true, shippingPhone: true, shippingAddress: true,
             shippingCity: true, shippingState: true, shippingPincode: true,
-            paymentMethod: true, createdAt: true,
+            paymentMethod: true, paymentStatus: true, createdAt: true,
           },
         },
         savedAddresses: { orderBy: { createdAt: "desc" } },

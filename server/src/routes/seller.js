@@ -6,6 +6,43 @@ const { safeErrorMessage } = require("../utils/helpers");
 
 const router = express.Router();
 
+function validateProduct(body, isUpdate) {
+  const { name, brand, category, price, originalPrice, description, features, specifications, images, inStock, badge } = body;
+  const errors = [];
+  if (!isUpdate || name !== undefined) {
+    if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 100) errors.push("Name must be 2-100 characters");
+  }
+  if (!isUpdate || brand !== undefined) {
+    if (typeof brand !== "string" || brand.trim().length < 1 || brand.trim().length > 60) errors.push("Brand must be 1-60 characters");
+  }
+  if (!isUpdate || category !== undefined) {
+    if (typeof category !== "string" || category.trim().length < 1 || category.trim().length > 60) errors.push("Category must be 1-60 characters");
+  }
+  if (price !== undefined) {
+    const p = parseFloat(price);
+    if (isNaN(p) || p <= 0 || p > 10000000) errors.push("Price must be a positive number up to 10,000,000");
+  }
+  if (originalPrice !== undefined && originalPrice !== null) {
+    const op = parseFloat(originalPrice);
+    if (isNaN(op) || op <= 0 || op > 10000000) errors.push("Original price must be a positive number up to 10,000,000");
+  }
+  if (!isUpdate || description !== undefined) {
+    if (typeof description !== "string" || description.trim().length < 10) errors.push("Description must be at least 10 characters");
+  }
+  if (images !== undefined) {
+    if (!Array.isArray(images) || images.length > 8 || images.some((i) => typeof i !== "string" || !/^https?:\/\/.+/.test(i))) errors.push("Images must be an array of up to 8 valid URLs");
+  }
+  if (features !== undefined) {
+    if (!Array.isArray(features) || features.length > 20 || features.some((f) => typeof f !== "string")) errors.push("Features must be an array of up to 20 strings");
+  }
+  if (specifications !== undefined) {
+    if (typeof specifications !== "object" || specifications === null || Array.isArray(specifications)) errors.push("Specifications must be an object");
+  }
+  if (badge !== undefined && badge !== null && typeof badge !== "string") errors.push("Badge must be a string");
+  if (inStock !== undefined && typeof inStock !== "boolean") errors.push("inStock must be a boolean");
+  return errors;
+}
+
 router.get("/products", auth, requireRole("SELLER"), async (req, res) => {
   try {
     const products = await prisma.product.findMany({
@@ -23,6 +60,10 @@ router.post("/products", auth, requireRole("SELLER"), async (req, res) => {
     const { id, name, brand, category, price, originalPrice, description, features, specifications, images, inStock, badge } = req.body;
     if (!name || !brand || !category || !price || !description) {
       return res.status(400).json({ error: "Missing required fields: name, brand, category, price, description" });
+    }
+    const validationErrors = validateProduct(req.body, false);
+    if (validationErrors.length) {
+      return res.status(400).json({ error: validationErrors[0] });
     }
     const productId = id || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString(36);
     const existing = await prisma.product.findUnique({ where: { id: productId } });
@@ -61,6 +102,10 @@ router.put("/products/:id", auth, requireRole("SELLER"), async (req, res) => {
     if (product.sellerId !== req.userId) return res.status(403).json({ error: "Not your product" });
 
     const { name, brand, category, price, originalPrice, description, features, specifications, images, inStock, badge } = req.body;
+    const validationErrors = validateProduct(req.body, true);
+    if (validationErrors.length) {
+      return res.status(400).json({ error: validationErrors[0] });
+    }
     const updated = await prisma.product.update({
       where: { id: req.params.id },
       data: {

@@ -28,6 +28,9 @@ interface Order {
   shippingState: string;
   shippingPincode: string;
   paymentMethod: string;
+  paymentStatus?: string;
+  paymentApprovedAt?: string;
+  deliveredAt?: string;
   status: string;
   createdAt: string;
 }
@@ -235,13 +238,14 @@ export default function OrdersPage() {
 
   const shareWhatsApp = (order: Order) => {
     const items = order.items.map((item: OrderItem) => `${item.name} x${item.quantity}`).join(", ");
+    const paymentLabel = order.paymentStatus === "APPROVED" ? "Online (Paid)" : "Online (Pending)";
     const text = encodeURIComponent(
       `*Batra Technologies - Order Update*\n\n` +
       `Order #${order.id.slice(-8)}\n` +
       `Items: ${items}\n` +
       `Total: ${formatPrice(order.totalAmount)}\n` +
       `Status: ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}\n` +
-      `Payment: ${order.paymentMethod}\n\n` +
+      `Payment: ${paymentLabel}\n\n` +
       `Track your order at: batratechnologies.com`
     );
     window.open(`https://wa.me/?text=${text}`, "_blank");
@@ -299,6 +303,28 @@ export default function OrdersPage() {
 
                 {expanded && (
                   <div className="px-6 py-6 space-y-6 border-t border-dark-800/50">
+                    {order.paymentStatus === "PENDING" && (
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                        <p className="text-amber-400 font-semibold text-sm flex items-center gap-2">
+                          <Clock size={16} /> Payment Pending
+                        </p>
+                        <p className="text-dark-400 text-xs mt-1.5 leading-relaxed">
+                          Complete your online payment by{" "}
+                          <span className="text-amber-400 font-medium">{new Date(new Date(order.createdAt).getTime() + 24 * 60 * 60 * 1000).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" })}</span>{" "}
+                          to keep this order confirmed. If payment is not confirmed within 24 hours, the order will be cancelled automatically.
+                        </p>
+                      </div>
+                    )}
+                    {order.paymentStatus === "APPROVED" && (
+                      <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                        <p className="text-green-400 font-semibold text-sm flex items-center gap-2">
+                          <Check size={16} /> Payment Approved
+                        </p>
+                        <p className="text-dark-400 text-xs mt-1.5">
+                          {order.paymentApprovedAt ? <>Your payment was approved on {new Date(order.paymentApprovedAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}. Your order is confirmed.</> : "Your payment has been approved and your order is confirmed."}
+                        </p>
+                      </div>
+                    )}
                     <div className="bg-dark-800/30 rounded-xl p-5">
                       <p className="text-xs text-dark-500 uppercase tracking-wider mb-4 font-medium">Order Tracking</p>
                       <OrderTrackingTimeline status={order.status} />
@@ -320,10 +346,10 @@ export default function OrdersPage() {
                     <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 pt-2">
                       <div className="text-xs text-dark-500 min-w-0 flex-1">
                         <p>{order.shippingAddress}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}</p>
-                        <p className="mt-1 text-gold-400">Payment: {order.paymentMethod}</p>
+                        <p className="mt-1 text-gold-400">Payment: Online Payment{order.paymentStatus === "APPROVED" ? " · Approved" : order.paymentStatus === "PENDING" ? " · Pending" : order.paymentStatus ? ` · ${order.paymentStatus}` : ""}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        {order.status === "confirmed" && (
+                        {(order.status === "pending" || order.status === "confirmed") && (
                           <button onClick={() => setModalState({ type: "cancel", orderId: order.id })} className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
                             <X size={16} /> Cancel Order
                           </button>
@@ -349,7 +375,7 @@ export default function OrdersPage() {
                 {!expanded && (
                   <div className="px-6 py-3 bg-dark-900/30 flex items-center justify-between text-xs text-dark-500">
                     <span>{order.shippingAddress}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}</span>
-                    <span className="text-gold-400">Cash on Delivery</span>
+                    <span className="text-gold-400">{order.paymentStatus === "APPROVED" ? "Online Payment · Paid" : "Online Payment"}</span>
                   </div>
                 )}
               </div>

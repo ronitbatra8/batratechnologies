@@ -79,7 +79,9 @@ model Order {
   shippingCity    String
   shippingState   String
   shippingPincode String
-  paymentMethod   String   @default("COD")
+  paymentMethod   String   @default("ONLINE")
+  paymentStatus   String   @default("PENDING")
+  paymentApprovedAt DateTime?
   status          String   @default("pending")
   createdAt       DateTime @default(now())
   deliveredAt     DateTime?

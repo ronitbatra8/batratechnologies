@@ -1,8 +1,15 @@
+require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const prisma = new PrismaClient();
 
 async function main() {
+  const ownerPassword = process.env.OWNER_PASSWORD;
+  if (!ownerPassword) {
+    console.error("OWNER_PASSWORD is not set in server/.env");
+    process.exit(1);
+  }
+
   console.log("=== Resetting database ===");
 
   // Delete in dependency order
@@ -30,7 +37,7 @@ async function main() {
   await prisma.product.deleteMany();
 
   // Create owner account
-  const hashedPassword = await bcrypt.hash("owner_ronit_123", 10);
+  const hashedPassword = await bcrypt.hash(ownerPassword, 10);
   const owner = await prisma.user.create({
     data: {
       name: "Ronit Batra",

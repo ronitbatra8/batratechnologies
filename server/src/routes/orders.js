@@ -3,6 +3,7 @@ const prisma = require("../prisma");
 const auth = require("../middleware/auth");
 const { sendOrderConfirmation } = require("../utils/email");
 const { safeErrorMessage } = require("../utils/helpers");
+const { maybeExpireOrder, expireUnpaidOrders } = require("../utils/payments");
 
 const router = express.Router();
 
@@ -12,6 +13,9 @@ router.post("/", auth, async (req, res) => {
     if (!items || !items.length) return res.status(400).json({ error: "No items in order" });
     if (!shippingName || !shippingPhone || !shippingAddress || !shippingCity || !shippingState || !shippingPincode) {
       return res.status(400).json({ error: "Shipping details are required" });
+    }
+    if (paymentMethod && paymentMethod !== "ONLINE") {
+      return res.status(400).json({ error: "Only online payment is available. Cash on delivery has been removed." });
     }
 
     let verifiedTotal = 0;
@@ -42,8 +46,9 @@ router.post("/", auth, async (req, res) => {
         shippingCity,
         shippingState,
         shippingPincode,
-        paymentMethod: paymentMethod === "UPI" ? "UPI" : "COD",
-        status: "confirmed",
+        paymentMethod: "ONLINE",
+        paymentStatus: "PENDING",
+        status: "pending",
       },
     });
 
@@ -64,6 +69,7 @@ router.post("/", auth, async (req, res) => {
 
 router.get("/", auth, async (req, res) => {
   try {
+    try { await expireUnpaidOrders(prisma); } catch (expErr) { console.error("Expire unpaid orders failed:", expErr.message); }
     const orders = await prisma.order.findMany({
       where: { userId: req.userId },
       orderBy: { createdAt: "desc" },
@@ -93,15 +99,17 @@ router.get("/", auth, async (req, res) => {
 
 router.get("/track/:id", async (req, res) => {
   try {
-    const order = await prisma.order.findUnique({
+    let order = await prisma.order.findUnique({
       where: { id: req.params.id },
       select: {
         id: true, items: true, totalAmount: true, status: true, createdAt: true, deliveredAt: true,
         shippingName: true, shippingPhone: true, shippingAddress: true,
-        shippingCity: true, shippingState: true, shippingPincode: true, paymentMethod: true,
+        shippingCity: true, shippingState: true, shippingPincode: true,
+        paymentMethod: true, paymentStatus: true, paymentApprovedAt: true,
       },
     });
     if (!order) return res.status(404).json({ error: "Order not found" });
+    order = await maybeExpireOrder(prisma, order);
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
@@ -110,10 +118,11 @@ router.get("/track/:id", async (req, res) => {
 
 router.get("/:id", auth, async (req, res) => {
   try {
-    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    let order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order || order.userId !== req.userId) {
       return res.status(404).json({ error: "Order not found" });
     }
+    order = await maybeExpireOrder(prisma, order);
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: safeErrorMessage(err) });
@@ -124,7 +133,7 @@ router.post("/:id/cancel", auth, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({ where: { id: req.params.id } });
     if (!order || order.userId !== req.userId) return res.status(404).json({ error: "Order not found" });
-    if (order.status !== "confirmed") return res.status(400).json({ error: "Order can only be cancelled before shipping" });
+    if (order.status !== "pending" && order.status !== "confirmed") return res.status(400).json({ error: "Order can only be cancelled before shipping" });
 
     await prisma.order.update({
       where: { id: order.id },

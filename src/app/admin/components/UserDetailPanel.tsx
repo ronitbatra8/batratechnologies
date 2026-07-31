@@ -353,7 +353,7 @@ function OrdersTab({ orders, onNavigate }: { orders: any[]; onNavigate: (tab: Ta
                 </p>
               </div>
               {order.paymentMethod && (
-                <p className="text-xs text-dark-500 mt-1.5">Payment: {order.paymentMethod}</p>
+                <p className="text-xs text-dark-500 mt-1.5">Payment: {order.paymentMethod === "ONLINE" ? "Online Payment" : order.paymentMethod}{order.paymentStatus === "APPROVED" ? " · Paid" : order.paymentStatus === "PENDING" ? " · Pending" : ""}</p>
               )}
             </div>
           )}

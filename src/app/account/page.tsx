@@ -13,6 +13,7 @@ interface Order {
   totalAmount: number;
   status: string;
   paymentMethod: string;
+  paymentStatus?: string;
   createdAt: string;
   shippingName: string;
   shippingCity: string;
@@ -271,7 +272,7 @@ export default function AccountPage() {
                           <p className="text-gold-400 font-semibold">₹{order.totalAmount.toLocaleString("en-IN")}</p>
                         </div>
                         <div className="mt-3 pt-3 border-t border-dark-700/50 flex items-center justify-between">
-                          <p className="text-dark-500 text-xs">{order.paymentMethod}</p>
+                          <p className="text-dark-500 text-xs">{order.paymentMethod === "ONLINE" ? "Online Payment" : order.paymentMethod}{order.paymentStatus === "APPROVED" ? " · Paid" : order.paymentStatus === "PENDING" ? " · Pending" : ""}</p>
                           <Link href={`/orders`} className="text-gold-400 text-xs font-medium hover:text-gold-300 flex items-center gap-1">
                             View Details <ChevronRight size={12} />
                           </Link>
