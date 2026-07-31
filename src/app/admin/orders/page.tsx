@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Menu, X, RefreshCw } from "lucide-react";
 import { Tab, API, adminHeaders } from "../components/types";
 import AuthGate from "../components/AuthGate";
@@ -23,6 +23,23 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [navHidden, setNavHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > lastScrollY.current && y > 120) {
+        setNavHidden(true);
+      } else {
+        setNavHidden(false);
+      }
+      lastScrollY.current = y;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const [orders, setOrders] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -124,7 +141,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-dark-950 page-transition">
-      <div className="lg:hidden fixed top-24 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-xl border-b border-dark-800/50 px-4 py-3 flex items-center justify-between">
+      <div className={`lg:hidden fixed left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-xl border-b border-dark-800/50 px-4 py-3 flex items-center justify-between transition-all duration-500 ${navHidden ? "top-0" : "top-24"}`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-400 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
           {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -134,9 +151,9 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <Sidebar tab={tab} setTab={setTab} loading={loading} onRefresh={loadAll} onSignOut={handleSignOut} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} badges={badges} />
+      <Sidebar tab={tab} setTab={setTab} loading={loading} onRefresh={loadAll} onSignOut={handleSignOut} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} badges={badges} navHidden={navHidden} />
 
-      <main className="lg:ml-64 pt-28 lg:pt-8 min-h-screen">
+      <main className="lg:ml-64 pt-44 lg:pt-8 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {tab === "overview" && <OverviewTab stats={stats} orders={orders} passwordResets={passwordResets} messages={messages} onNavigate={handleNavigateToTab} />}
           {tab === "orders" && <OrdersTab orders={orders} updatingId={updatingId} onStatusUpdate={updateStatus} onAssign={assignOrder} onPaymentAction={paymentAction} focusOrderId={focusOrderId} onFocusHandled={() => setFocusOrderId(null)} adminKey={adminKey} />}

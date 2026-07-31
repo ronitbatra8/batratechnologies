@@ -17,7 +17,7 @@ const navItems: { key: Tab; label: string; icon: any }[] = [
 
 export { navItems };
 
-export default function Sidebar({ tab, setTab, loading, onRefresh, onSignOut, sidebarOpen, setSidebarOpen, badges }: {
+export default function Sidebar({ tab, setTab, loading, onRefresh, onSignOut, sidebarOpen, setSidebarOpen, badges, navHidden }: {
   tab: Tab;
   setTab: (t: Tab) => void;
   loading: boolean;
@@ -26,12 +26,13 @@ export default function Sidebar({ tab, setTab, loading, onRefresh, onSignOut, si
   sidebarOpen: boolean;
   setSidebarOpen: (v: boolean) => void;
   badges: Partial<Record<Tab, number>>;
+  navHidden: boolean;
 }) {
   return (
     <>
       {sidebarOpen && <div className="lg:hidden fixed inset-0 bg-black/60 z-30" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed top-24 left-0 h-[calc(100%-6rem)] w-64 bg-dark-900/80 backdrop-blur-xl border-r border-dark-800/50 z-40 transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
+      <aside className={`fixed left-0 w-64 bg-dark-900/80 backdrop-blur-xl border-r border-dark-800/50 z-40 transition-all duration-500 ${navHidden ? "top-0 h-screen" : "top-24 h-[calc(100%-6rem)]"} ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}>
         <div className="p-6 border-b border-dark-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">

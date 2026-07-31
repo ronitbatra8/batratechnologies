@@ -72,9 +72,11 @@ function HeroSection() {
           </div>
         </div>
       </div>
-      <div className="hero-line-reveal absolute bottom-10 left-1/2 -translate-x-1/2" style={{ animationDelay: `${base + 1.8}s` }}>
-        <div className="w-6 h-10 border-2 border-dark-600 rounded-full flex items-start justify-center p-1.5 animate-bounce">
-          <div className="w-1.5 h-3 bg-gold-500 rounded-full animate-pulse" />
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+        <div className="hero-line-reveal" style={{ animationDelay: `${base + 1.8}s` }}>
+          <div className="w-6 h-10 border-2 border-dark-600 rounded-full flex items-start justify-center p-1.5 animate-bounce">
+            <div className="w-1.5 h-3 bg-gold-500 rounded-full animate-pulse" />
+          </div>
         </div>
       </div>
     </section>
@@ -285,7 +287,9 @@ function NewsletterSection() {
     <section className="max-w-7xl mx-auto px-6 py-24">
       <Reveal direction="scale">
         <div className="relative text-center">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl animate-float" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96">
+            <div className="w-full h-full bg-gold-500/5 rounded-full blur-3xl animate-float" />
+          </div>
           <div className="relative z-10">
             <span className="text-gold-400 text-xs font-semibold uppercase tracking-[0.3em]">Newsletter</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-white mt-3 mb-4">Stay Ahead</h2>
