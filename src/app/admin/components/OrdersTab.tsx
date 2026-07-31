@@ -291,7 +291,8 @@ export default function OrdersTab({
                           <Package className="w-3.5 h-3.5" /> Delivery Info
                         </h4>
                         <div className="space-y-2">
-                          {order.assignedTo ? (
+                          {["shipped", "return_requested", "return_pickup_out"].includes(order.status) ? (
+                            <>{order.assignedTo ? (
                             <div>
                               <p className="text-white text-sm">
                                 Assigned to: <span className="text-purple-400 font-medium">{order.deliveryExecutive?.name || `#${order.assignedTo.slice(-8).toUpperCase()}`}</span>
@@ -372,6 +373,13 @@ export default function OrdersTab({
                               {!onAssign && (
                                 <p className="text-dark-500 text-xs">Login as admin to assign</p>
                               )}
+                            </div>
+                          )}</>
+                          ) : (
+                            <div>
+                              <p className="text-dark-400 text-sm">
+                                {order.assignedTo ? <>Assigned to: <span className="text-purple-400 font-medium">{order.deliveryExecutive?.name || `#${order.assignedTo.slice(-8).toUpperCase()}`}</span></> : (order.status === "delivered" || order.status === "returned") ? "Order completed — no assignment needed" : order.status === "confirmed" ? "Mark order as shipped to assign a delivery executive" : "Assignment not available for this order status"}
+                              </p>
                             </div>
                           )}
                         </div>
