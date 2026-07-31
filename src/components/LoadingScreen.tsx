@@ -18,7 +18,7 @@ export default function LoadingScreen() {
   if (!show) return null;
 
   return (
-    <div className={`fixed inset-0 z-[100] bg-dark-950 flex items-center justify-center transition-opacity duration-700 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
+    <div className={`fixed inset-0 z-[100] bg-dark-950 flex items-center justify-center transition-opacity duration-700 overflow-hidden ${fadeOut ? "opacity-0" : "opacity-100"}`}>
       <div className="flex flex-col items-center select-none px-4">
 
         {/* Row 1: BT logo + BATRA side by side */}

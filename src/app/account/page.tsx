@@ -42,7 +42,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AccountPage() {
-  const { user, updateUser } = useAuth();
+  const { user, loading: authLoading, updateUser } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
@@ -57,13 +57,14 @@ export default function AccountPage() {
   const [deletingAddr, setDeletingAddr] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push("/login");
       return;
     }
     setNameValue(user.name);
     loadData();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const loadData = async () => {
     try {
@@ -120,6 +121,14 @@ export default function AccountPage() {
       setDeletingAddr(null);
     }
   };
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-gold-500/20 border-t-gold-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!user) return null;
 

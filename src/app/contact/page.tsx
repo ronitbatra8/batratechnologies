@@ -56,7 +56,7 @@ export default function ContactPage() {
 
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="grid lg:grid-cols-3 gap-8">
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {[
               { icon: MapPin, title: "Visit", details: ["Ganj Road / Khairtal Road", "Kishangarh Bas, Alwar, Rajasthan"] },
               { icon: Phone, title: "Call", details: ["9351396757"] },
@@ -67,15 +67,15 @@ export default function ContactPage() {
                 <div className="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center shrink-0 border border-gold-500/10">
                   <item.icon size={20} className="text-gold-500" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-display font-semibold text-white mb-1">{item.title}</h3>
-                  {item.details.map((d, i) => (<p key={i} className="text-sm text-dark-400">{d}</p>))}
+                  {item.details.map((d, i) => (<p key={i} className="text-sm text-dark-400 break-words">{d}</p>))}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             <div className="bg-dark-900/60 border border-dark-800/50 rounded-2xl p-8">
               {submitted ? (
                 <div className="text-center py-16">

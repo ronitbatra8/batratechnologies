@@ -96,7 +96,7 @@ export default function ProductDetailClient() {
       </nav>
 
       <div className="grid md:grid-cols-2 gap-12 mb-24">
-        <div>
+        <div className="min-w-0">
           <div className="bg-dark-900 rounded-2xl overflow-hidden border border-dark-800/50 aspect-square">
             <img src={product.images[activeImage]} alt={product.name} className="w-full h-full object-cover" />
           </div>
@@ -109,7 +109,7 @@ export default function ProductDetailClient() {
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-semibold text-gold-400 uppercase tracking-[0.2em]">{product.brand}</span>
             {product.badge && <span className="bg-gold-500/10 text-gold-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">{product.badge}</span>}
@@ -127,7 +127,7 @@ export default function ProductDetailClient() {
             <span className="text-sm text-dark-400">{product.rating} &middot; {product.reviewCount} reviews</span>
           </div>
 
-          <div className="flex items-baseline gap-4 mb-8">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 mb-8">
             <span className="text-4xl font-bold text-white">{formatPrice(product.price)}</span>
             {product.originalPrice && (
               <>
