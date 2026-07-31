@@ -21,3 +21,5 @@ dev-errors.txt
 tunnel-watch.log
 watch-errors.txt
 startup.log
+
+server/uploads/
