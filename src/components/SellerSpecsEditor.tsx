@@ -26,9 +26,9 @@ export default function SellerSpecsEditor({ value, onChange }: Props) {
       <div className="space-y-2">
         {value.map((row, i) => (
           <div key={i} className="flex gap-2 items-center">
-            <input value={row.key} onChange={e => update(i, "key", e.target.value)} placeholder="e.g. Battery" className="w-2/5 bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors" />
-            <input value={row.value} onChange={e => update(i, "value", e.target.value)} placeholder="e.g. 5000 mAh" className="flex-1 bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500 transition-colors" />
-            <button type="button" onClick={() => remove(i)} className="p-3 text-dark-400 hover:text-red-400 transition-colors shrink-0" aria-label="Remove specification"><X size={16} /></button>
+            <input value={row.key} onChange={e => update(i, "key", e.target.value)} placeholder="e.g. Battery" className="flex-1 min-w-0 sm:w-2/5 sm:flex-none bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-dark-500 focus:outline-none focus:border-gold-500 transition-colors" />
+            <input value={row.value} onChange={e => update(i, "value", e.target.value)} placeholder="e.g. 5000 mAh" className="flex-1 min-w-0 bg-dark-800 border border-dark-700 rounded-xl px-4 py-3 text-sm text-white placeholder:text-dark-500 focus:outline-none focus:border-gold-500 transition-colors" />
+            <button type="button" onClick={() => remove(i)} className="p-2.5 text-dark-400 hover:text-red-400 transition-colors shrink-0" aria-label="Remove specification"><X size={16} /></button>
           </div>
         ))}
       </div>

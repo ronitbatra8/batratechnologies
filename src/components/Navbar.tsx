@@ -51,7 +51,7 @@ export default function Navbar() {
   return (
     <>
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "top-3 left-4 right-4 rounded-full py-4 bg-dark-950/55 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-lg shadow-black/40 lg:top-0 lg:left-0 lg:right-0 lg:rounded-none lg:py-3 lg:bg-dark-950/90 lg:border-b lg:border-x-0 lg:border-t-0 lg:shadow-none" : "py-5 bg-transparent lg:py-5"} ${hideNav ? "-translate-y-[calc(100%+1rem)]" : "translate-y-0"}`}>
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gold-400 to-gold-700 flex items-center justify-center text-dark-950 font-bold text-sm group-hover:shadow-lg group-hover:shadow-gold-500/20 transition-shadow">
             BT
@@ -75,23 +75,23 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4">
-          <Link href="/products?focus=search" className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-dark-800 transition-colors group">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link href="/products?focus=search" className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-dark-800 transition-colors group">
             <Search size={18} className="text-dark-300 group-hover:text-gold-400 transition-colors" />
           </Link>
           {mounted && user && (
-            <Link href="/wishlist" className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-dark-800 transition-colors group">
+            <Link href="/wishlist" className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg hover:bg-dark-800 transition-colors group">
               <Heart size={18} className="text-dark-300 group-hover:text-gold-400 transition-colors" />
             </Link>
           )}
           {mounted && user ? (
             <div ref={userMenuRef} className="relative">
               <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 text-sm text-dark-300 hover:text-gold-400 transition-colors">
-                <div className="w-8 h-8 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
                   <span className="text-gold-400 font-semibold text-xs">{user.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <span className="hidden sm:inline font-medium">{user.name.split(" ")[0]}</span>
-                <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown size={14} className={`hidden sm:block transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-dark-900 border border-dark-800 rounded-xl shadow-xl py-2 animate-fade-in-down">
@@ -163,10 +163,11 @@ export default function Navbar() {
               <User size={18} />
             </Link>
           )}
-          <Link href="/cart" className="relative group">
-            <ShoppingCart size={20} className="text-dark-300 group-hover:text-gold-400 transition-colors" />
+          <Link href="/cart" className="relative group flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9">
+            <ShoppingCart size={18} className="sm:hidden text-dark-300 group-hover:text-gold-400 transition-colors" />
+            <ShoppingCart size={20} className="hidden sm:block text-dark-300 group-hover:text-gold-400 transition-colors" />
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-gold-500 text-dark-950 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-scale-in">
+              <span className="absolute -top-1 -right-1 bg-gold-500 text-dark-950 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-scale-in">
                 {totalItems}
               </span>
             )}
