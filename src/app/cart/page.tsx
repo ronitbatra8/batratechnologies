@@ -56,13 +56,13 @@ export default function CartPage() {
                     <Trash2 size={16} />
                   </button>
                 </div>
-                <div className="flex items-center justify-between mt-4">
-                  <div className="flex items-center border border-dark-700 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+                  <div className="flex items-center border border-dark-700 rounded-lg self-start">
                     <button onClick={() => updateQuantity(product.id, quantity - 1)} className="p-2 hover:bg-dark-800 transition-colors rounded-l-lg text-dark-400"><Minus size={14} /></button>
                     <span className="px-3 py-2 font-medium text-sm text-white">{quantity}</span>
                     <button onClick={() => updateQuantity(product.id, quantity + 1)} className="p-2 hover:bg-dark-800 transition-colors rounded-r-lg text-dark-400"><Plus size={14} /></button>
                   </div>
-                  <span className="text-xl font-semibold text-white">{formatPrice(product.price * quantity)}</span>
+                  <span className="text-xl font-semibold text-white sm:text-right">{formatPrice(product.price * quantity)}</span>
                 </div>
               </div>
             </div>

@@ -76,7 +76,6 @@ export default function ProductDetailClient() {
     setAdded(true);
     setShowNotif(true);
     setTimeout(() => setAdded(false), 1500);
-    setTimeout(() => setShowNotif(false), 2000);
   };
 
   const handleBuyNow = () => {
@@ -209,7 +208,7 @@ export default function ProductDetailClient() {
         </section>
       )}
 
-      <CartNotification show={showNotif} productName={product.name} />
+      <CartNotification show={showNotif} productName={product.name} onDone={() => setShowNotif(false)} />
     </div>
   );
 }
