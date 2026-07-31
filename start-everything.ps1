@@ -90,14 +90,20 @@ Log "Backend restarted (PID: $($np.Id))"
 # 8. Update Vercel env
 Log "Updating Vercel env..."
 $api = "$url/api"
-& $Vercel env rm NEXT_PUBLIC_API_URL production --yes 2>&1 | Out-Null
-$api | & $Vercel env add NEXT_PUBLIC_API_URL production --yes 2>&1 | Out-Null
+try {
+    $null = & $Vercel env rm NEXT_PUBLIC_API_URL production --yes 2>&1
+} catch { Log "WARN: env rm failed (may not exist yet): $_" }
+try {
+    $null = $api | & $Vercel env add NEXT_PUBLIC_API_URL production --yes 2>&1
+} catch { Log "WARN: env add failed: $_" }
 Log "Vercel env updated: $api"
 
 # 9. Redeploy to Vercel
 Log "Redeploying to Vercel..."
-& $Vercel deploy --prod 2>&1 | Out-Null
-Log "Vercel redeploy triggered"
+try {
+    $result = & $Vercel deploy --prod 2>&1
+    Log "Vercel redeploy triggered"
+} catch { Log "WARN: redeploy failed: $_" }
 
 # 10. Start auto-tunnel watcher in background
 Log "Starting auto-tunnel watcher..."
