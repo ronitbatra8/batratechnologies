@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-dark-950 min-h-screen flex flex-col pb-24 lg:pb-0">
+      <body className="bg-dark-950 min-h-screen flex flex-col pb-28 lg:pb-0">
         <LoadingProvider>
           <LoadingScreen />
           <ContentWrapper>
