@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { ShoppingCart, Search, Menu, X, User, LogOut, Package, ChevronDown, Plus, Check, Trash2, Crown, Heart, MessageSquare, Truck, Store } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, User, LogOut, Package, ChevronDown, Plus, Check, Trash2, Crown, Heart, MessageSquare, Truck, Store, Home, ShoppingBag, Info, Mail } from "lucide-react";
 
 export default function Navbar() {
   const { totalItems } = useCart();
   const { user, logout, accounts, currentIndex, switchAccount, removeAccount } = useAuth();
   const isOwner = user?.email === "batra.ronit.08.11@gmail.com" || user?.phone === "9351396757";
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -63,7 +65,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="/products?focus=search" className="hidden md:flex items-center justify-center w-9 h-9 rounded-lg hover:bg-dark-800 transition-colors group">
+          <Link href="/products?focus=search" className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-dark-800 transition-colors group">
             <Search size={18} className="text-dark-300 group-hover:text-gold-400 transition-colors" />
           </Link>
           {mounted && user && (
@@ -72,13 +74,13 @@ export default function Navbar() {
             </Link>
           )}
           {mounted && user ? (
-            <div ref={userMenuRef} className="relative hidden md:block">
+            <div ref={userMenuRef} className="relative">
               <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 text-sm text-dark-300 hover:text-gold-400 transition-colors">
                 <div className="w-8 h-8 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
                   <span className="text-gold-400 font-semibold text-xs">{user.name.charAt(0).toUpperCase()}</span>
                 </div>
-                <span className="font-medium">{user.name.split(" ")[0]}</span>
-                <ChevronDown size={14} className={`transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                <span className="hidden sm:inline font-medium">{user.name.split(" ")[0]}</span>
+                <ChevronDown size={14} className={`hidden sm:block transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {userMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-56 bg-dark-900 border border-dark-800 rounded-xl shadow-xl py-2 animate-fade-in-down">
@@ -146,7 +148,7 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link href="/login" className="hidden md:flex items-center gap-2 text-sm text-dark-300 hover:text-gold-400 transition-colors">
+            <Link href="/login" className="flex items-center gap-2 text-sm text-dark-300 hover:text-gold-400 transition-colors">
               <User size={18} />
             </Link>
           )}
@@ -170,11 +172,6 @@ export default function Navbar() {
             <Link href="/products?focus=search" className="flex items-center gap-3 py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
               <Search size={16} /> Search Products
             </Link>
-            {["Home", "Products", "About", "Contact"].map((item) => (
-              <Link key={item} href={item === "Home" ? "/" : `/${item.toLowerCase()}`} className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
-                {item}
-              </Link>
-            ))}
             {mounted && user ? (
               <>
                 <Link href="/account" className="block py-3 text-dark-300 hover:text-gold-400 transition-colors text-sm uppercase tracking-widest font-medium border-b border-dark-800/30" onClick={() => setMenuOpen(false)}>
@@ -224,6 +221,25 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-dark-950/95 backdrop-luxury border-t border-dark-800/50 pb-[env(safe-area-inset-bottom)]">
+        <div className="grid grid-cols-4">
+          {[
+            { label: "Home", href: "/", icon: Home, active: pathname === "/" },
+            { label: "Products", href: "/products", icon: ShoppingBag, active: pathname === "/products" || pathname.startsWith("/products/") },
+            { label: "About", href: "/about", icon: Info, active: pathname.startsWith("/about") },
+            { label: "Contact", href: "/contact", icon: Mail, active: pathname.startsWith("/contact") },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className={`flex flex-col items-center gap-1 py-2.5 text-[10px] uppercase tracking-widest font-medium transition-colors ${item.active ? "text-gold-400" : "text-dark-400 hover:text-gold-400"}`}>
+                <Icon size={18} className={item.active ? "text-gold-400" : ""} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </header>
   );
 }
