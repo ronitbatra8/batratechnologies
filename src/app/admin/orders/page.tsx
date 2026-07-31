@@ -112,7 +112,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-dark-950 page-transition">
-      <div className="lg:hidden fixed top-20 left-0 right-0 z-50 bg-dark-900/95 backdrop-blur-xl border-b border-dark-800/50 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-24 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-xl border-b border-dark-800/50 px-4 py-3 flex items-center justify-between">
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-dark-400 hover:text-white transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
           {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
